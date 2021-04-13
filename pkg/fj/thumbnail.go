@@ -6,7 +6,6 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
-	"strings"
 
 	"github.com/anthonynsimon/bild/imgio"
 	"github.com/anthonynsimon/bild/transform"
@@ -35,7 +34,7 @@ func thumbnails(i Image, outDir string) (map[string]ThumbMeta, error) {
 
 	sst, err := os.Stat(i.Path)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("stat: %v", err)
 	}
 
 	dst, err := os.Stat(fullDest)
@@ -63,20 +62,26 @@ func thumbnails(i Image, outDir string) (map[string]ThumbMeta, error) {
 		}
 	}
 
-	thumbDir := filepath.Join(outDir, filepath.Dir(i.RelPath), "thumbs")
+	thumbDir := filepath.Join(outDir, filepath.Dir(i.RelPath), "_")
 	if err := os.MkdirAll(thumbDir, 0755); err != nil {
 		return nil, fmt.Errorf("mkdir: %v", err)
 	}
 
-	base := strings.Split(filepath.Base(i.Path), ".")[0]
+	base := filepath.Base(i.Path)
 	var img image.Image
 
 	thumbs := map[string]ThumbMeta{}
 
 	for name, t := range defaultThumbOpts {
-		thumbName := fmt.Sprintf("%s@%s.jpg", base, name)
-		thumbDest := filepath.Join(thumbDir, thumbName)
+		thumbName := base
+		thumbDest := filepath.Join(name, thumbName)
 		fullThumbDest := filepath.Join(outDir, thumbDest)
+
+		if err := os.MkdirAll(filepath.Dir(fullThumbDest), 0755); err != nil {
+			return nil, fmt.Errorf("mkdir: %v", err)
+		}
+
+		klog.Infof("checking %s", fullThumbDest)
 
 		st, err := os.Stat(fullThumbDest)
 		if err == nil && st.Size() > int64(128) && !updated {
@@ -84,6 +89,7 @@ func thumbnails(i Image, outDir string) (map[string]ThumbMeta, error) {
 			rt, err := readThumb(fullThumbDest)
 			if err == nil {
 				rt.RelPath = thumbDest
+				klog.Infof("found thumb: %+v", *rt)
 				thumbs[name] = *rt
 				continue
 			}
@@ -94,17 +100,19 @@ func thumbnails(i Image, outDir string) (map[string]ThumbMeta, error) {
 			klog.Infof("opening %s ...", fullDest)
 			img, err = imgio.Open(fullDest)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("imgio.Open: %v", err)
 			}
 		}
 
 		ct, err := createThumb(img, fullThumbDest, t)
 		if err != nil {
+			klog.Errorf("create failed: %v", err)
 			return nil, fmt.Errorf("create thumb: %w", err)
 		}
 
 		ct.RelPath = thumbDest
 		thumbs[name] = *ct
+		klog.Infof("created thumb: %+v", ct)
 	}
 
 	klog.Infof("thumbs: %+v", thumbs)
@@ -112,25 +120,36 @@ func thumbnails(i Image, outDir string) (map[string]ThumbMeta, error) {
 }
 
 func createThumb(i image.Image, path string, t ThumbOpts) (*ThumbMeta, error) {
-	klog.Infof("creating thumb: %s", path)
+	klog.Infof("creating %dx%d thumb: %s - %+v", t.X, t.Y, path, i.Bounds())
 	x := t.X
 	y := t.Y
 
+	if i.Bounds().Dy() == 0 {
+		return nil, fmt.Errorf("no Y for %+v", i)
+	}
+
+	if i.Bounds().Dx() == 0 {
+		return nil, fmt.Errorf("no X for %+v", i)
+	}
+
 	if t.X == 0 {
-		scale := i.Bounds().Dy() / t.Y
-		x = int(i.Bounds().Dx() / scale)
+		scale := float64(i.Bounds().Dy()) / float64(t.Y)
+		x = int(float64(i.Bounds().Dx()) / scale)
 	}
 
 	if t.Y == 0 {
-		scale := i.Bounds().Dx() / t.X
-		y = int(i.Bounds().Dy() / scale)
+		scale := float64(i.Bounds().Dx()) / float64(t.X)
+		klog.Infof("scale = %d (%d / %d)", scale, i.Bounds().Dx(), t.X)
+		y = int(float64(i.Bounds().Dy()) / scale)
 	}
 
 	rimg := transform.Resize(i, x, y, transform.Lanczos)
 	if err := imgio.Save(path, rimg, imgio.JPEGEncoder(t.Quality)); err != nil {
+		klog.Errorf("save failed: %v", err)
 		return nil, fmt.Errorf("save: %w", err)
 	}
 
+	klog.Infof("created")
 	return &ThumbMeta{X: rimg.Bounds().Dx(), Y: rimg.Bounds().Dy()}, nil
 }
 

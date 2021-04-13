@@ -24,7 +24,7 @@ func read(path string, et *exiftool.Exiftool) (Image, error) {
 	}
 
 	for k, v := range fi.Fields {
-		klog.Infof("%q=%v\n", k, v)
+		klog.V(2).Infof("%q=%v\n", k, v)
 	}
 
 	i.Make, err = fi.GetString("Make")

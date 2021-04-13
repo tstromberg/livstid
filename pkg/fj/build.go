@@ -11,8 +11,11 @@ import (
 	"k8s.io/klog/v2"
 )
 
-//go:embed stream.tmpl
+//go:embed assets/stream.tmpl
 var streamTmpl string
+
+//go:embed assets/stream.css
+var streamCSS string
 
 func Build(inDir string, outDir string) error {
 	klog.Infof("build: %s -> %s", inDir, outDir)
@@ -22,7 +25,17 @@ func Build(inDir string, outDir string) error {
 
 	for _, i := range is {
 		i.Thumbnails, err = thumbnails(*i, outDir)
+		if err != nil {
+			return fmt.Errorf("thumbnails: %v", err)
+		}
+
 		i.ThumbPath = i.Thumbnails["512x"].RelPath
+
+		if i.ThumbPath == "" {
+			return fmt.Errorf("unable to find thumb for %+v", i)
+		}
+
+		klog.Infof("thumbpath: %s", i.ThumbPath)
 	}
 
 	html, err := renderStream("fj stream", is)
@@ -42,11 +55,13 @@ func renderStream(title string, is []*Image) (string, error) {
 	}
 
 	data := struct {
-		Title  string
-		Images []*Image
+		Title      string
+		Stylesheet template.CSS
+		Images     []*Image
 	}{
-		Title:  title,
-		Images: is,
+		Title:      title,
+		Stylesheet: template.CSS(streamCSS),
+		Images:     is,
 	}
 
 	var tpl bytes.Buffer
