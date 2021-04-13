@@ -1,0 +1,53 @@
+body {
+    background-color: #D4D4D4;
+    color: #A2401D;
+}
+
+.strip-container {
+    display: flex;
+}
+
+.neg-col {
+    width: 30%;
+    background: #362B1F;
+    padding: 0 15px;
+    margin: 10px;
+    border-left: 20px dotted #F5F5F5;
+    border-right: 20px dotted #F5F5F5;
+    outline: 15px solid #362B1F;
+}
+
+.spacer-col {
+    width: 10%;
+}
+
+.date-col {
+    width: 2px;
+    margin: 0;
+    padding: 0;
+}
+
+.date {
+    margin: 0;
+    padding: 0;
+    background-color: #362B1F;
+    color: #ffff55;
+    writing-mode: vertical-lr;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: small;
+    height: 400px;
+}
+
+.meta-col {
+    padding: 2em;
+    width: 60%;
+}
+
+.neg img {
+    max-width: 100%;
+    height: auto;
+}
+
+.metadata {
+    height: 400px;
+}
