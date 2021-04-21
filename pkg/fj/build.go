@@ -48,7 +48,14 @@ func Build(inDir string, outDir string) error {
 }
 
 func renderStream(title string, is []*Image) (string, error) {
-	funcMap := template.FuncMap{}
+	funcMap := template.FuncMap{
+		"Odd": func(i int) bool {
+			if i%2 == 1 {
+				return true
+			}
+			return false
+		},
+	}
 	tmpl, err := template.New("stream").Funcs(funcMap).Parse(streamTmpl)
 	if err != nil {
 		return "", fmt.Errorf("parse: %v", err)

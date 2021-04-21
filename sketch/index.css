@@ -1,5 +1,5 @@
 body {
-    background-color: #D4D4D4;
+    background-color: #DADADA;
     color: #A2401D;
 }
 
@@ -36,6 +36,10 @@ body {
     font-family: 'Courier New', Courier, monospace;
     font-size: small;
     height: 400px;
+}
+
+.odd {
+    background-color: #F5F5F5;
 }
 
 .meta-col {

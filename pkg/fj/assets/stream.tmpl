@@ -10,28 +10,27 @@
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link href="https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
-    <link rel="stylesheet" type="text/css" href="index2.css">
-</head>
+  </head>
 
 <style>
 {{ .Stylesheet }}
 </style>
 
 <body>
-    {{ range .Images }}
+    {{ range $i, $p := .Images }}
     <div class="entry">
         <div class="spacer-col"></div>
-        <div class="date-col">&#9036; {{ .Taken.Format "2006-01-02" }}</div>
+        <div class="date-col">&#9036; {{ $p.Taken.Format "2006-01-02" }}</div>
         <div class="hole-left-col"></div>
-        <div class="neg-col"><a href="{{ .RelPath }}"><img src="{{ .ThumbPath }}"></div>
+        <div class="neg-col"><a href="{{ $p.RelPath }}"><img src="{{ $p.ThumbPath }}"></a></div>
         <div class="hole-right-col"></div>
         <div class="unused-col"></div>
 
-        <div class="meta-col">
-            <h3 class="title">{{ .Title }}</h3>
-            <p class="desc">{{ .Description }}</p>
+        <div class="meta-col {{ if Odd $i }}odd{{ end }}">
+            <h3 class="title"><a href="{{ $p.RelPath }}">{{ $p.Title }}</a></h3>
+            <p class="desc">{{ $p.Description }}</p>
 
-            <p class="exif">{{ .Make }} {{.Model }} &mdash; ƒ/{{.Aperture}} @ {{ .FocalLength }}, {{ .Speed}}s, ISO {{ .ISO }}</p>
+            <p class="exif">{{ $p.Make }} {{ $p.Model }} &mdash; ƒ/{{ $p.Aperture }} @ {{ $p.FocalLength }}, {{ $p.Speed}}s, ISO {{ $p.ISO }}</p>
         </div>
     </div>
     {{ end }}
