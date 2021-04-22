@@ -76,6 +76,7 @@ func read(path string, et *exiftool.Exiftool) (Image, error) {
 	if err != nil {
 		return i, fmt.Errorf("FocalLength: %v", err)
 	}
+	i.FocalLength = strings.Replace(i.FocalLength, ".0", "", -1)
 
 	i.Keywords, err = fi.GetStrings("Keywords")
 	if err != nil {

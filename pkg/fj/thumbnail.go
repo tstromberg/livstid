@@ -3,14 +3,14 @@ package fj
 import (
 	"fmt"
 	"image"
+	_ "image/jpeg"
+	_ "image/png"
 	"os"
 	"path/filepath"
-	"strconv"
 
 	"github.com/anthonynsimon/bild/imgio"
 	"github.com/anthonynsimon/bild/transform"
 	"github.com/otiai10/copy"
-	"github.com/rwcarlsen/goexif/exif"
 	"k8s.io/klog/v2"
 )
 
@@ -160,29 +160,10 @@ func readThumb(path string) (*ThumbMeta, error) {
 	}
 	defer f.Close()
 
-	ex, err := exif.Decode(f)
+	image, _, err := image.DecodeConfig(f)
 	if err != nil {
-		return nil, fmt.Errorf("decode: %w", err)
+		return nil, fmt.Errorf("unable to decode: %v", err)
 	}
 
-	gx, err := ex.Get(exif.ImageWidth)
-	if err != nil {
-		return nil, fmt.Errorf("imgwidth: %w", err)
-	}
-	x, err := strconv.Atoi(gx.String())
-	if err != nil {
-		return nil, err
-	}
-
-	gy, err := ex.Get(exif.ImageLength)
-	if err != nil {
-		return nil, fmt.Errorf("imglen: %w", err)
-	}
-
-	y, err := strconv.Atoi(gy.String())
-	if err != nil {
-		return nil, err
-	}
-
-	return &ThumbMeta{X: x, Y: y}, nil
+	return &ThumbMeta{X: image.Width, Y: image.Height}, nil
 }

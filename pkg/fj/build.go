@@ -7,6 +7,7 @@ import (
 	"html/template"
 	"io/ioutil"
 	"path/filepath"
+	"sort"
 
 	"k8s.io/klog/v2"
 )
@@ -60,6 +61,10 @@ func renderStream(title string, is []*Image) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("parse: %v", err)
 	}
+
+	sort.Slice(is, func(i, j int) bool {
+		return is[i].Taken.After(is[j].Taken)
+	})
 
 	data := struct {
 		Title      string
