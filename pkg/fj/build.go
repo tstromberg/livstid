@@ -18,6 +18,12 @@ var streamTmpl string
 //go:embed assets/stream.css
 var streamCSS string
 
+//go:embed assets/album.tmpl
+var albumTmpl string
+
+//go:embed assets/album.css
+var albumCSS string
+
 func Build(inDir string, outDir string) error {
 	klog.Infof("build: %s -> %s", inDir, outDir)
 
@@ -58,6 +64,36 @@ func renderStream(title string, is []*Image) (string, error) {
 		},
 	}
 	tmpl, err := template.New("stream").Funcs(funcMap).Parse(streamTmpl)
+	if err != nil {
+		return "", fmt.Errorf("parse: %v", err)
+	}
+
+	sort.Slice(is, func(i, j int) bool {
+		return is[i].Taken.After(is[j].Taken)
+	})
+
+	data := struct {
+		Title      string
+		Stylesheet template.CSS
+		Images     []*Image
+	}{
+		Title:      title,
+		Stylesheet: template.CSS(streamCSS),
+		Images:     is,
+	}
+
+	var tpl bytes.Buffer
+	if err = tmpl.Execute(&tpl, data); err != nil {
+		return "", fmt.Errorf("execute: %w", err)
+	}
+
+	out := tpl.String()
+	return out, nil
+}
+
+func renderAlbum(title string, is []*Image) (string, error) {
+	funcMap := template.FuncMap{}
+	tmpl, err := template.New("album").Funcs(funcMap).Parse(albumTmpl)
 	if err != nil {
 		return "", fmt.Errorf("parse: %v", err)
 	}
