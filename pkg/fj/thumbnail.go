@@ -7,11 +7,17 @@ import (
 	_ "image/png"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/anthonynsimon/bild/imgio"
 	"github.com/anthonynsimon/bild/transform"
 	"github.com/otiai10/copy"
 	"k8s.io/klog/v2"
+)
+
+var (
+	ThumbDateFormat = "2006-01-02"
+	ModTimeFormat   = "150405"
 )
 
 // ThumbOpts are thumbnail soptions
@@ -62,33 +68,24 @@ func thumbnails(i Image, outDir string) (map[string]ThumbMeta, error) {
 		}
 	}
 
-	thumbDir := filepath.Join(outDir, filepath.Dir(i.RelPath), "_")
-	if err := os.MkdirAll(thumbDir, 0755); err != nil {
-		return nil, fmt.Errorf("mkdir: %v", err)
-	}
-
-	base := filepath.Base(i.Path)
 	var img image.Image
-
 	thumbs := map[string]ThumbMeta{}
 
 	for name, t := range defaultThumbOpts {
-		thumbName := base
-		thumbDest := filepath.Join(name, thumbName)
-		fullThumbDest := filepath.Join(outDir, thumbDest)
+		relPath := thumbRelPath(i, t)
+		klog.Infof("thumb relpath: %s", relPath)
+		fullPath := filepath.Join(outDir, relPath)
 
-		if err := os.MkdirAll(filepath.Dir(fullThumbDest), 0755); err != nil {
+		if err := os.MkdirAll(filepath.Dir(fullPath), 0755); err != nil {
 			return nil, fmt.Errorf("mkdir: %v", err)
 		}
 
-		klog.Infof("checking %s", fullThumbDest)
-
-		st, err := os.Stat(fullThumbDest)
+		st, err := os.Stat(fullPath)
 		if err == nil && st.Size() > int64(128) && !updated {
-			klog.Infof("%s exists (%d bytes)", fullThumbDest, st.Size())
-			rt, err := readThumb(fullThumbDest)
+			klog.Infof("%s exists (%d bytes)", fullPath, st.Size())
+			rt, err := readThumb(fullPath)
 			if err == nil {
-				rt.RelPath = thumbDest
+				rt.RelPath = relPath
 				klog.Infof("found thumb: %+v", *rt)
 				thumbs[name] = *rt
 				continue
@@ -97,25 +94,24 @@ func thumbnails(i Image, outDir string) (map[string]ThumbMeta, error) {
 		}
 
 		if img == nil {
-			klog.Infof("opening %s ...", fullDest)
-			img, err = imgio.Open(fullDest)
+			klog.Infof("opening %s ...", i.Path)
+			img, err = imgio.Open(i.Path)
 			if err != nil {
 				return nil, fmt.Errorf("imgio.Open: %v", err)
 			}
 		}
 
-		ct, err := createThumb(img, fullThumbDest, t)
+		ct, err := createThumb(img, fullPath, t)
 		if err != nil {
 			klog.Errorf("create failed: %v", err)
 			return nil, fmt.Errorf("create thumb: %w", err)
 		}
 
-		ct.RelPath = thumbDest
+		ct.RelPath = relPath
 		thumbs[name] = *ct
 		klog.Infof("created thumb: %+v", ct)
 	}
 
-	klog.Infof("thumbs: %+v", thumbs)
 	return thumbs, nil
 }
 
@@ -166,4 +162,24 @@ func readThumb(path string) (*ThumbMeta, error) {
 	}
 
 	return &ThumbMeta{X: image.Width, Y: image.Height}, nil
+}
+
+// thumbRelPath returns a relative path to a thumbnail, optimizing for both cache busting and SEO
+func thumbRelPath(i Image, t ThumbOpts) string {
+	base := filepath.Base(i.RelPath)
+	ext := filepath.Ext(base)
+	noExt := strings.TrimSuffix(base, ext)
+
+	thumbDir := filepath.Join(filepath.Dir(i.RelPath), "_")
+	dimensions := ""
+	if t.X != 0 {
+		dimensions = fmt.Sprintf("x%d", t.X)
+	}
+	if t.Y != 0 {
+		dimensions = fmt.Sprintf("y%d", t.Y)
+	}
+
+	// ModTimeFormat is important to catch minor adjustments
+	newBase := fmt.Sprintf("%s_%s_%s@%s_%s.jpg", noExt, i.Title, i.Taken.Format(ThumbDateFormat), dimensions, i.ModTime.Format(ModTimeFormat))
+	return filepath.Join(thumbDir, newBase)
 }

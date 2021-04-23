@@ -12,8 +12,11 @@ type ThumbMeta struct {
 }
 
 type Image struct {
-	Path       string
-	RelPath    string
+	Path    string
+	ModTime time.Time
+	RelPath string
+	Hier    []string
+
 	Thumbnails map[string]ThumbMeta
 	ThumbPath  string
 

@@ -2,6 +2,7 @@ package fj
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -130,9 +131,14 @@ func Find(root string) ([]*Image, error) {
 
 				i.Path = path
 				i.RelPath, err = filepath.Rel(root, path)
+				i.Hier = strings.Split(i.RelPath, string(filepath.Separator))
+
+				fi, err := os.Stat(path)
 				if err != nil {
 					return err
 				}
+
+				i.ModTime = fi.ModTime()
 
 				found = append(found, &i)
 			}
