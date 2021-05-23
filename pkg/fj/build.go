@@ -28,9 +28,9 @@ func Build(inDir string, outDir string) error {
 	klog.Infof("build: %s -> %s", inDir, outDir)
 
 	is, err := Find(inDir)
-	klog.Infof("images: %+v", is)
 
 	for _, i := range is {
+		klog.Infof("build image: %+v", i)
 		i.Thumbnails, err = thumbnails(*i, outDir)
 		if err != nil {
 			return fmt.Errorf("thumbnails: %v", err)

@@ -36,7 +36,7 @@ var defaultThumbOpts = map[string]ThumbOpts{
 func thumbnails(i Image, outDir string) (map[string]ThumbMeta, error) {
 	klog.Infof("creating thumbnails for %s in %s", i.Path, outDir)
 	fullDest := filepath.Join(outDir, i.RelPath)
-	klog.Infof("relpath: %s -- full dest: %s", i.RelPath, fullDest)
+	klog.V(1).Infof("relpath: %s -- full dest: %s", i.RelPath, fullDest)
 
 	sst, err := os.Stat(i.Path)
 	if err != nil {
@@ -48,7 +48,7 @@ func thumbnails(i Image, outDir string) (map[string]ThumbMeta, error) {
 
 	if err != nil {
 		updated = true
-		klog.Infof("updating %s: does not exist", fullDest)
+		klog.V(1).Infof("updating %s: does not exist", fullDest)
 	}
 
 	if err == nil && sst.Size() != dst.Size() {
@@ -73,7 +73,7 @@ func thumbnails(i Image, outDir string) (map[string]ThumbMeta, error) {
 
 	for name, t := range defaultThumbOpts {
 		relPath := thumbRelPath(i, t)
-		klog.Infof("thumb relpath: %s", relPath)
+		klog.V(1).Infof("thumb relpath: %s", relPath)
 		fullPath := filepath.Join(outDir, relPath)
 
 		if err := os.MkdirAll(filepath.Dir(fullPath), 0755); err != nil {
@@ -82,11 +82,11 @@ func thumbnails(i Image, outDir string) (map[string]ThumbMeta, error) {
 
 		st, err := os.Stat(fullPath)
 		if err == nil && st.Size() > int64(128) && !updated {
-			klog.Infof("%s exists (%d bytes)", fullPath, st.Size())
+			klog.V(1).Infof("%s exists (%d bytes)", fullPath, st.Size())
 			rt, err := readThumb(fullPath)
 			if err == nil {
 				rt.RelPath = relPath
-				klog.Infof("found thumb: %+v", *rt)
+				klog.V(1).Infof("found thumb: %+v", *rt)
 				thumbs[name] = *rt
 				continue
 			}
@@ -94,7 +94,6 @@ func thumbnails(i Image, outDir string) (map[string]ThumbMeta, error) {
 		}
 
 		if img == nil {
-			klog.Infof("opening %s ...", i.Path)
 			img, err = imgio.Open(i.Path)
 			if err != nil {
 				return nil, fmt.Errorf("imgio.Open: %v", err)
@@ -109,7 +108,7 @@ func thumbnails(i Image, outDir string) (map[string]ThumbMeta, error) {
 
 		ct.RelPath = relPath
 		thumbs[name] = *ct
-		klog.Infof("created thumb: %+v", ct)
+		klog.V(1).Infof("created thumb: %+v", ct)
 	}
 
 	return thumbs, nil
@@ -135,7 +134,7 @@ func createThumb(i image.Image, path string, t ThumbOpts) (*ThumbMeta, error) {
 
 	if t.Y == 0 {
 		scale := float64(i.Bounds().Dx()) / float64(t.X)
-		klog.Infof("scale = %d (%d / %d)", scale, i.Bounds().Dx(), t.X)
+		klog.V(1).Infof("scale = %d (%d / %d)", scale, i.Bounds().Dx(), t.X)
 		y = int(float64(i.Bounds().Dy()) / scale)
 	}
 
@@ -145,7 +144,6 @@ func createThumb(i image.Image, path string, t ThumbOpts) (*ThumbMeta, error) {
 		return nil, fmt.Errorf("save: %w", err)
 	}
 
-	klog.Infof("created")
 	return &ThumbMeta{X: rimg.Bounds().Dx(), Y: rimg.Bounds().Dy()}, nil
 }
 

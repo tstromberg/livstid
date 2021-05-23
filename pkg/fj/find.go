@@ -40,12 +40,12 @@ func read(path string, et *exiftool.Exiftool) (Image, error) {
 
 	i.LensMake, err = fi.GetString("LensMake")
 	if err != nil {
-		return i, fmt.Errorf("LensMake: %v", err)
+		klog.Errorf("unable to get LensMake: %v", err)
 	}
 
 	i.LensModel, err = fi.GetString("LensModel")
 	if err != nil {
-		return i, fmt.Errorf("LensModel: %v", err)
+		klog.Errorf("unable to get LensModel: %v", err)
 	}
 
 	i.Height, err = fi.GetInt("ImageHeight")
@@ -126,6 +126,7 @@ func Find(root string) ([]*Image, error) {
 				klog.Infof("found %s", path)
 				i, err := read(path, et)
 				if err != nil {
+					klog.Errorf("read failure: %v", err)
 					return err
 				}
 
@@ -135,6 +136,7 @@ func Find(root string) ([]*Image, error) {
 
 				fi, err := os.Stat(path)
 				if err != nil {
+					klog.Errorf("stat failure: %v", err)
 					return err
 				}
 
