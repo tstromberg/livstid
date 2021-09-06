@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-// ThumbMeta describes a thumbnail
+// ThumbMeta describes a thumbnail.
 type ThumbMeta struct {
 	X       int
 	Y       int
@@ -39,4 +39,17 @@ type Image struct {
 
 	Width  int64
 	Height int64
+}
+
+type Album struct {
+	Locations []string
+	StartTime time.Time
+	EndTime   time.Time
+
+	Path    string
+	ModTime time.Time
+	RelPath string
+	Hier    []string
+
+	Images []*Image
 }

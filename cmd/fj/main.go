@@ -3,13 +3,18 @@ package main
 import (
 	"flag"
 
+	_ "image/jpeg"
+	_ "image/png"
+
 	"k8s.io/klog/v2"
 
 	"github.com/tstromberg/fj/pkg/fj"
 )
 
-var inDir = flag.String("in", "", "Location of input directory")
-var outDir = flag.String("out", "", "Location of output directory")
+var (
+	inDir  = flag.String("in", "", "Location of input directory")
+	outDir = flag.String("out", "", "Location of output directory")
+)
 
 /*
 var commit = flag.Bool("commit", false, "Commit changes")
@@ -30,6 +35,6 @@ func main() {
 	}
 
 	if err := fj.Build(*inDir, *outDir); err != nil {
-		klog.Exitf("build failed: %v", err)
+		klog.Exitf("build failed: %w", err)
 	}
 }

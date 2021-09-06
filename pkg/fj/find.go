@@ -21,7 +21,7 @@ func read(path string, et *exiftool.Exiftool) (Image, error) {
 	var err error
 
 	if fi.Err != nil {
-		return i, fmt.Errorf("extract fail for %q: %v", path, fi.Err)
+		return i, fmt.Errorf("extract fail for %q: %w", path, fi.Err)
 	}
 
 	for k, v := range fi.Fields {
@@ -30,78 +30,78 @@ func read(path string, et *exiftool.Exiftool) (Image, error) {
 
 	i.Make, err = fi.GetString("Make")
 	if err != nil {
-		return i, fmt.Errorf("Make: %v", err)
+		return i, fmt.Errorf("get Make: %w", err)
 	}
 
 	i.Model, err = fi.GetString("Model")
 	if err != nil {
-		return i, fmt.Errorf("Model: %v", err)
+		return i, fmt.Errorf("get Model: %w", err)
 	}
 
 	i.LensMake, err = fi.GetString("LensMake")
 	if err != nil {
-		klog.Errorf("unable to get LensMake: %v", err)
+		klog.Errorf("unable to get LensMake: %w", err)
 	}
 
 	i.LensModel, err = fi.GetString("LensModel")
 	if err != nil {
-		klog.Errorf("unable to get LensModel: %v", err)
+		klog.Errorf("unable to get LensModel: %w", err)
 	}
 
 	i.Height, err = fi.GetInt("ImageHeight")
 	if err != nil {
-		return i, fmt.Errorf("ImageHeight: %v", err)
+		return i, fmt.Errorf("get ImageHeight: %w", err)
 	}
 
 	i.Width, err = fi.GetInt("ImageWidth")
 	if err != nil {
-		return i, fmt.Errorf("ImageWidth: %v", err)
+		return i, fmt.Errorf("get ImageWidth: %w", err)
 	}
 
 	i.ISO, err = fi.GetInt("ISO")
 	if err != nil {
-		return i, fmt.Errorf("ISO: %v", err)
+		return i, fmt.Errorf("get ISO: %w", err)
 	}
 
 	i.Aperture, err = fi.GetFloat("ApertureValue")
 	if err != nil {
-		return i, fmt.Errorf("ApertureValue: %v", err)
+		return i, fmt.Errorf("get ApertureValue: %w", err)
 	}
 
 	i.Speed, err = fi.GetString("ShutterSpeed")
 	if err != nil {
-		return i, fmt.Errorf("ShutterSpeed: %v", err)
+		return i, fmt.Errorf("get ShutterSpeed: %w", err)
 	}
 
 	i.FocalLength, err = fi.GetString("FocalLength")
 	if err != nil {
-		return i, fmt.Errorf("FocalLength: %v", err)
+		return i, fmt.Errorf("get FocalLength: %w", err)
 	}
-	i.FocalLength = strings.Replace(i.FocalLength, ".0", "", -1)
+	i.FocalLength = strings.ReplaceAll(i.FocalLength, ".0", "")
 
 	i.Keywords, err = fi.GetStrings("Keywords")
 	if err != nil {
-		klog.Errorf("unable to get keywords: %v", err)
+		klog.V(2).Infof("unable to get keywords: %w", err)
 	}
 
 	i.Description, err = fi.GetString("ImageDescription")
 	if err != nil {
-		klog.Errorf("unable to get description: %v", err)
+		klog.V(2).Infof("unable to get description: %w", err)
 	}
 
 	i.Title, err = fi.GetString("Headline")
 	if err != nil {
-		klog.Errorf("unable to get headline: %v", err)
+		klog.V(2).Infof("unable to get headline: %w", err)
 	}
 
 	ds, err := fi.GetString("DateTimeOriginal")
 	if err != nil {
-		return i, fmt.Errorf("DateTimeOriginal: %v", err)
+		return i, fmt.Errorf("DateTimeOriginal: %w", err)
 	}
 
 	i.Taken, err = time.Parse(exifDate, ds)
 	if err != nil {
-		return i, fmt.Errorf("parse time %q: %v", ds, err)
+		return i, fmt.Errorf("parse time %q: %w", ds, err)
 	}
 
 	return i, nil
@@ -118,7 +118,7 @@ func Find(root string) ([]*Image, error) {
 
 	err = godirwalk.Walk(root, &godirwalk.Options{
 		Callback: func(path string, de *godirwalk.Dirent) error {
-			if strings.Contains(path, ".git") {
+			if filepath.Base(path)[0] == '.' {
 				return godirwalk.SkipThis
 			}
 
@@ -126,17 +126,21 @@ func Find(root string) ([]*Image, error) {
 				klog.Infof("found %s", path)
 				i, err := read(path, et)
 				if err != nil {
-					klog.Errorf("read failure: %v", err)
+					klog.Errorf("read failure: %w", err)
 					return err
 				}
 
 				i.Path = path
 				i.RelPath, err = filepath.Rel(root, path)
+				if err != nil {
+					return err
+				}
+
 				i.Hier = strings.Split(i.RelPath, string(filepath.Separator))
 
 				fi, err := os.Stat(path)
 				if err != nil {
-					klog.Errorf("stat failure: %v", err)
+					klog.Errorf("stat failure: %w", err)
 					return err
 				}
 

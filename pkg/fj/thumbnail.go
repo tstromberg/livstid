@@ -3,8 +3,6 @@ package fj
 import (
 	"fmt"
 	"image"
-	_ "image/jpeg"
-	_ "image/png"
 	"os"
 	"path/filepath"
 	"strings"
@@ -20,7 +18,7 @@ var (
 	ModTimeFormat   = "150405"
 )
 
-// ThumbOpts are thumbnail soptions
+// ThumbOpts are thumbnail soptions.
 type ThumbOpts struct {
 	X       int
 	Y       int
@@ -40,7 +38,7 @@ func thumbnails(i Image, outDir string) (map[string]ThumbMeta, error) {
 
 	sst, err := os.Stat(i.Path)
 	if err != nil {
-		return nil, fmt.Errorf("stat: %v", err)
+		return nil, fmt.Errorf("stat: %w", err)
 	}
 
 	dst, err := os.Stat(fullDest)
@@ -64,7 +62,7 @@ func thumbnails(i Image, outDir string) (map[string]ThumbMeta, error) {
 	if updated {
 		err := copy.Copy(i.Path, fullDest)
 		if err != nil {
-			return nil, fmt.Errorf("copy: %v", err)
+			return nil, fmt.Errorf("copy: %w", err)
 		}
 	}
 
@@ -76,8 +74,8 @@ func thumbnails(i Image, outDir string) (map[string]ThumbMeta, error) {
 		klog.V(1).Infof("thumb relpath: %s", relPath)
 		fullPath := filepath.Join(outDir, relPath)
 
-		if err := os.MkdirAll(filepath.Dir(fullPath), 0755); err != nil {
-			return nil, fmt.Errorf("mkdir: %v", err)
+		if err := os.MkdirAll(filepath.Dir(fullPath), 0o755); err != nil {
+			return nil, fmt.Errorf("mkdir: %w", err)
 		}
 
 		st, err := os.Stat(fullPath)
@@ -90,19 +88,19 @@ func thumbnails(i Image, outDir string) (map[string]ThumbMeta, error) {
 				thumbs[name] = *rt
 				continue
 			}
-			klog.Warningf("unable to read thumb: %v", err)
+			klog.Warningf("unable to read thumb: %w", err)
 		}
 
 		if img == nil {
 			img, err = imgio.Open(i.Path)
 			if err != nil {
-				return nil, fmt.Errorf("imgio.Open: %v", err)
+				return nil, fmt.Errorf("imgio.Open: %w", err)
 			}
 		}
 
 		ct, err := createThumb(img, fullPath, t)
 		if err != nil {
-			klog.Errorf("create failed: %v", err)
+			klog.Errorf("create failed: %w", err)
 			return nil, fmt.Errorf("create thumb: %w", err)
 		}
 
@@ -140,7 +138,7 @@ func createThumb(i image.Image, path string, t ThumbOpts) (*ThumbMeta, error) {
 
 	rimg := transform.Resize(i, x, y, transform.Lanczos)
 	if err := imgio.Save(path, rimg, imgio.JPEGEncoder(t.Quality)); err != nil {
-		klog.Errorf("save failed: %v", err)
+		klog.Errorf("save failed: %w", err)
 		return nil, fmt.Errorf("save: %w", err)
 	}
 
@@ -154,15 +152,15 @@ func readThumb(path string) (*ThumbMeta, error) {
 	}
 	defer f.Close()
 
-	image, _, err := image.DecodeConfig(f)
+	ic, _, err := image.DecodeConfig(f)
 	if err != nil {
-		return nil, fmt.Errorf("unable to decode: %v", err)
+		return nil, fmt.Errorf("unable to decode: %w", err)
 	}
 
-	return &ThumbMeta{X: image.Width, Y: image.Height}, nil
+	return &ThumbMeta{X: ic.Width, Y: ic.Height}, nil
 }
 
-// thumbRelPath returns a relative path to a thumbnail, optimizing for both cache busting and SEO
+// thumbRelPath returns a relative path to a thumbnail, optimizing for both cache busting and SEO.
 func thumbRelPath(i Image, t ThumbOpts) string {
 	base := filepath.Base(i.RelPath)
 	ext := filepath.Ext(base)

@@ -18,22 +18,26 @@ var streamTmpl string
 //go:embed assets/stream.css
 var streamCSS string
 
-//go:embed assets/album.tmpl
-var albumTmpl string
+//go:embed assets/album_index.tmpl
+var albumIdxTmpl string
 
-//go:embed assets/album.css
-var albumCSS string
+//go:embed assets/album_index.css
+var albumIdxCSS string
 
 func Build(inDir string, outDir string) error {
 	klog.Infof("build: %s -> %s", inDir, outDir)
 
+	albums := map[string]*Album{}
 	is, err := Find(inDir)
+	if err != nil {
+		return fmt.Errorf("find: %w", err)
+	}
 
 	for _, i := range is {
 		klog.Infof("build image: %+v", i)
 		i.Thumbnails, err = thumbnails(*i, outDir)
 		if err != nil {
-			return fmt.Errorf("thumbnails: %v", err)
+			return fmt.Errorf("thumbnails: %w", err)
 		}
 
 		i.ThumbPath = i.Thumbnails["512x"].RelPath
@@ -43,29 +47,53 @@ func Build(inDir string, outDir string) error {
 		}
 
 		klog.Infof("thumbpath: %s", i.ThumbPath)
+
+		rd := filepath.Dir(i.RelPath)
+		if albums[rd] == nil {
+			albums[rd] = &Album{
+				RelPath: rd,
+				Images:  []*Image{},
+			}
+		}
+		albums[rd].Images = append(albums[rd].Images, i)
 	}
 
-	html, err := renderStream("fj stream", is)
+	bs, err := renderStream("fj stream", is)
 	if err != nil {
-		return err
+		return fmt.Errorf("render stream: %w", err)
 	}
 
-	err = ioutil.WriteFile(filepath.Join(outDir, "index.html"), []byte(html), 0644)
-	return err
+	if err = ioutil.WriteFile(filepath.Join(outDir, "index.html"), bs, 0o600); err != nil {
+		return fmt.Errorf("write index: %w", err)
+	}
+
+	abs := []*Album{}
+	for _, a := range albums {
+		abs = append(abs, a)
+	}
+	// TODO: Sort by date
+
+	bs, err = renderAlbumIndex("fj albums", abs)
+	if err != nil {
+		return fmt.Errorf("render albums: %w", err)
+	}
+
+	if err = ioutil.WriteFile(filepath.Join(outDir, "albums.html"), bs, 0o600); err != nil {
+		return fmt.Errorf("write albums: %w", err)
+	}
+
+	return nil
 }
 
-func renderStream(title string, is []*Image) (string, error) {
+func renderStream(title string, is []*Image) ([]byte, error) {
 	funcMap := template.FuncMap{
 		"Odd": func(i int) bool {
-			if i%2 == 1 {
-				return true
-			}
-			return false
+			return i%2 == 1
 		},
 	}
 	tmpl, err := template.New("stream").Funcs(funcMap).Parse(streamTmpl)
 	if err != nil {
-		return "", fmt.Errorf("parse: %v", err)
+		return nil, fmt.Errorf("parse: %w", err)
 	}
 
 	sort.Slice(is, func(i, j int) bool {
@@ -84,39 +112,35 @@ func renderStream(title string, is []*Image) (string, error) {
 
 	var tpl bytes.Buffer
 	if err = tmpl.Execute(&tpl, data); err != nil {
-		return "", fmt.Errorf("execute: %w", err)
+		return nil, fmt.Errorf("execute: %w", err)
 	}
 
-	out := tpl.String()
+	out := tpl.Bytes()
 	return out, nil
 }
 
-func renderAlbum(title string, is []*Image) (string, error) {
+func renderAlbumIndex(title string, as []*Album) ([]byte, error) {
 	funcMap := template.FuncMap{}
-	tmpl, err := template.New("album").Funcs(funcMap).Parse(albumTmpl)
+	tmpl, err := template.New("album").Funcs(funcMap).Parse(albumIdxTmpl)
 	if err != nil {
-		return "", fmt.Errorf("parse: %v", err)
+		return nil, fmt.Errorf("parse: %w", err)
 	}
-
-	sort.Slice(is, func(i, j int) bool {
-		return is[i].Taken.After(is[j].Taken)
-	})
 
 	data := struct {
 		Title      string
 		Stylesheet template.CSS
-		Images     []*Image
+		Albums     []*Album
 	}{
 		Title:      title,
-		Stylesheet: template.CSS(streamCSS),
-		Images:     is,
+		Stylesheet: template.CSS(albumIdxCSS),
+		Albums:     as,
 	}
 
 	var tpl bytes.Buffer
 	if err = tmpl.Execute(&tpl, data); err != nil {
-		return "", fmt.Errorf("execute: %w", err)
+		return nil, fmt.Errorf("execute: %w", err)
 	}
 
-	out := tpl.String()
+	out := tpl.Bytes()
 	return out, nil
 }
