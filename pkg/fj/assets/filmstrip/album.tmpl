@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<!-- album.tmpl -->
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>album: {{ .Title }}</title>
+    <link rel="shortcut icon" href="images/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="/_/style.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  </head>
+
+<body>
+    {{ range $i, $p := .Album.Images }}
+        <div class="entry">
+          <a href="{{ RelPath $.Album.OutPath $p.OutPath }}"><img src="_/{{ $p.ThumbPath | BasePath }}"></a>
+          <h3 class="title"><a href="{{ RelPath $.Album.OutPath $p.OutPath }}">{{ $p.Title }}</a></h3>
+          <p class="desc">{{ $p.Description }}</p>
+
+          <p class="exif">{{ $p.Make }} {{ $p.Model }} &mdash; ƒ/{{ $p.Aperture }} @ {{ $p.FocalLength }}, {{ $p.Speed}}s, ISO {{ $p.ISO }}</p>
+        </div>
+    {{ end }}
+</body>
+
+</html>

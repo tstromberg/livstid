@@ -9,26 +9,20 @@ import (
 	"path/filepath"
 	"sort"
 
+	"github.com/otiai10/copy"
 	"k8s.io/klog/v2"
 )
 
-//go:embed assets/stream.tmpl
+//go:embed assets/filmstrip/stream.tmpl
 var streamTmpl string
 
-//go:embed assets/stream.css
-var streamCSS string
-
-//go:embed assets/album_index.tmpl
+//go:embed assets/filmstrip/album_index.tmpl
 var albumIdxTmpl string
 
-//go:embed assets/album_index.css
-var albumIdxCSS string
-
-//go:embed assets/album.tmpl
+//go:embed assets/filmstrip/album.tmpl
 var albumTmpl string
 
-//go:embed assets/album.css
-var albumCSS string
+var assetsDir = "pkg/fj/assets/filmstrip"
 
 func Build(inDir string, outDir string) error {
 	klog.Infof("build: %s -> %s", inDir, outDir)
@@ -67,6 +61,10 @@ func Build(inDir string, outDir string) error {
 		albums[rd].Images = append(albums[rd].Images, i)
 	}
 
+	if err := copyAssets(assetsDir, outDir); err != nil {
+		return fmt.Errorf("copyAssets: %w", err)
+	}
+
 	if err := writeStream(outDir, is); err != nil {
 		return fmt.Errorf("write stream: %w", err)
 	}
@@ -88,8 +86,25 @@ func Build(inDir string, outDir string) error {
 	return nil
 }
 
+func copyAssets(inDir string, outDir string) error {
+	for _, ext := range []string{"png", "css", "jpg", "gif"} {
+		src := fmt.Sprintf("%s/*.%s", inDir, ext)
+		ms, err := filepath.Glob(src)
+		klog.Infof("copying %d assets from %s", len(ms), src)
+		if err != nil {
+			return err
+		}
+		for _, m := range ms {
+			if err := copy.Copy(m, filepath.Join(outDir, "_", filepath.Base(m))); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
 func writeStream(outDir string, is []*Image) error {
-	bs, err := renderAlbum(&Album{Title: "Daily Photos", Images: is, OutPath: outDir}, streamTmpl, streamCSS)
+	bs, err := renderAlbum(&Album{Title: "Daily Photos", Images: is, OutPath: outDir}, streamTmpl)
 	if err != nil {
 		return fmt.Errorf("render stream: %w", err)
 	}
@@ -100,7 +115,7 @@ func writeStream(outDir string, is []*Image) error {
 }
 
 func writeAlbumIndex(outDir string, as []*Album) error {
-	bs, err := renderAlbumIndex("Albums", outDir, as, albumIdxTmpl, albumIdxCSS)
+	bs, err := renderAlbumIndex("Albums", outDir, as, albumIdxTmpl)
 	if err != nil {
 		return fmt.Errorf("render albums: %w", err)
 	}
@@ -112,7 +127,7 @@ func writeAlbumIndex(outDir string, as []*Album) error {
 
 func writeAlbums(as []*Album) error {
 	for _, a := range as {
-		bs, err := renderAlbum(a, albumTmpl, albumCSS)
+		bs, err := renderAlbum(a, albumTmpl)
 		if err != nil {
 			return fmt.Errorf("render album: %w", err)
 		}
@@ -128,7 +143,7 @@ func writeAlbums(as []*Album) error {
 	return nil
 }
 
-func renderAlbum(a *Album, ts string, css string) ([]byte, error) {
+func renderAlbum(a *Album, ts string) ([]byte, error) {
 	tmpl, err := template.New("album").Funcs(tmplFunctions()).Parse(ts)
 	if err != nil {
 		return nil, fmt.Errorf("parse: %w", err)
@@ -140,13 +155,11 @@ func renderAlbum(a *Album, ts string, css string) ([]byte, error) {
 	})
 
 	data := struct {
-		Title      string
-		Stylesheet template.CSS
-		Album      *Album
+		Title string
+		Album *Album
 	}{
-		Title:      a.Title,
-		Stylesheet: template.CSS(css),
-		Album:      a,
+		Title: a.Title,
+		Album: a,
 	}
 
 	var tpl bytes.Buffer
@@ -158,22 +171,20 @@ func renderAlbum(a *Album, ts string, css string) ([]byte, error) {
 	return out, nil
 }
 
-func renderAlbumIndex(title string, outDir string, as []*Album, ts string, css string) ([]byte, error) {
+func renderAlbumIndex(title string, outDir string, as []*Album, ts string) ([]byte, error) {
 	tmpl, err := template.New("album index").Funcs(tmplFunctions()).Parse(ts)
 	if err != nil {
 		return nil, fmt.Errorf("parse: %w", err)
 	}
 
 	data := struct {
-		Title      string
-		OutDir     string
-		Stylesheet template.CSS
-		Albums     []*Album
+		Title  string
+		OutDir string
+		Albums []*Album
 	}{
-		Title:      title,
-		OutDir:     outDir,
-		Stylesheet: template.CSS(css),
-		Albums:     as,
+		Title:  title,
+		OutDir: outDir,
+		Albums: as,
 	}
 
 	var tpl bytes.Buffer
