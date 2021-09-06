@@ -130,7 +130,7 @@ func Find(root string) ([]*Image, error) {
 					return err
 				}
 
-				i.Path = path
+				i.InPath = path
 				i.RelPath, err = filepath.Rel(root, path)
 				if err != nil {
 					return err

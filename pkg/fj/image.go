@@ -12,7 +12,8 @@ type ThumbMeta struct {
 }
 
 type Image struct {
-	Path    string
+	InPath  string
+	OutPath string
 	ModTime time.Time
 	RelPath string
 	Hier    []string
@@ -42,14 +43,16 @@ type Image struct {
 }
 
 type Album struct {
-	Locations []string
 	StartTime time.Time
 	EndTime   time.Time
 
-	Path    string
+	InPath  string
+	OutPath string
 	ModTime time.Time
-	RelPath string
 	Hier    []string
+
+	Title       string
+	Description string
 
 	Images []*Image
 }

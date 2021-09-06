@@ -1,10 +1,12 @@
 <!DOCTYPE html>
+<!-- stream.tmpl -->
+
 <html lang="en">
 
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ .Title }}</title>
+    <title>stream index: {{ .Title }}</title>
     <link rel="shortcut icon" href="images/favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <link rel="preconnect" href="https://fonts.gstatic.com">
@@ -17,12 +19,12 @@
 </style>
 
 <body>
-    {{ range $i, $p := .Images }}
+    {{ range $i, $p := .Album.Images }}
     <div class="entry">
         <div class="spacer-col"></div>
         <div class="date-col">&#9036;&nbsp;&nbsp;{{ $p.Taken.Format "2006-01-02" }}</div>
         <div class="hole-left-col"></div>
-        <div class="neg-col"><a href="{{ $p.RelPath }}"><img src="{{ $p.ThumbPath }}"></a></div>
+        <div class="neg-col"><a href="{{ RelPath $.Album.OutPath $p.OutPath }}"><img src="{{ $p.ThumbPath }}"></a></div>
         <div class="hole-right-col"></div>
         <div class="unused-col"></div>
 

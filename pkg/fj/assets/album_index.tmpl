@@ -1,10 +1,11 @@
 <!DOCTYPE html>
+<!-- album_index.tmpl -->
 <html lang="en">
 
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ .Title }}</title>
+    <title>album index: {{ .Title }}</title>
     <link rel="shortcut icon" href="images/favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <link rel="preconnect" href="https://fonts.gstatic.com">
@@ -19,7 +20,7 @@
 <body>
     <ul>
     {{ range $i, $a := .Albums }}
-    <li>{{ $a.StartTime.Format "2006-01-02" }}<a href="{{ $a.RelPath }}">{{ $a.RelPath }}</a></li>
+    <li>{{ $a.StartTime.Format "2006-01-02" }}<a href="{{ RelPath $.OutDir $a.OutPath }}">{{ $a.OutPath | BasePath }}</a></li>
     {{ end }}
     </ul>
 </body>

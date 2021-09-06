@@ -32,11 +32,11 @@ var defaultThumbOpts = map[string]ThumbOpts{
 }
 
 func thumbnails(i Image, outDir string) (map[string]ThumbMeta, error) {
-	klog.Infof("creating thumbnails for %s in %s", i.Path, outDir)
+	klog.Infof("creating thumbnails for %s in %s", i.InPath, outDir)
 	fullDest := filepath.Join(outDir, i.RelPath)
 	klog.V(1).Infof("relpath: %s -- full dest: %s", i.RelPath, fullDest)
 
-	sst, err := os.Stat(i.Path)
+	sst, err := os.Stat(i.InPath)
 	if err != nil {
 		return nil, fmt.Errorf("stat: %w", err)
 	}
@@ -60,7 +60,7 @@ func thumbnails(i Image, outDir string) (map[string]ThumbMeta, error) {
 	}
 
 	if updated {
-		err := copy.Copy(i.Path, fullDest)
+		err := copy.Copy(i.InPath, fullDest)
 		if err != nil {
 			return nil, fmt.Errorf("copy: %w", err)
 		}
@@ -92,7 +92,7 @@ func thumbnails(i Image, outDir string) (map[string]ThumbMeta, error) {
 		}
 
 		if img == nil {
-			img, err = imgio.Open(i.Path)
+			img, err = imgio.Open(i.InPath)
 			if err != nil {
 				return nil, fmt.Errorf("imgio.Open: %w", err)
 			}

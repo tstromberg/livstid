@@ -35,6 +35,6 @@ func main() {
 	}
 
 	if err := fj.Build(*inDir, *outDir); err != nil {
-		klog.Exitf("build failed: %w", err)
+		klog.Exitf("build failed: %v", err)
 	}
 }
