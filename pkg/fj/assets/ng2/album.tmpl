@@ -2,12 +2,18 @@
         <head>
             <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1">
             <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js" type="text/javascript"></script>
-            <link  href="https://cdnjs.cloudflare.com/ajax/libs/nanogallery2/2.4.2/css/nanogallery2.min.css" rel="stylesheet" type="text/css">
+            <link href="https://cdnjs.cloudflare.com/ajax/libs/nanogallery2/2.4.2/css/nanogallery2.min.css" rel="stylesheet" type="text/css">
             <script  type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/nanogallery2/2.4.2/jquery.nanogallery2.min.js"></script>
         </head>
+        <style>
+        body {
+            background-color: #353535;
+        }
+
+        </style>
         <body>
 
-              <h1>word.</h1>
+              <h1>photos > {{.Title}}</h1>
 
               <!-- ### start of the gallery definition ### -->
               <div id="nanogallery2"
@@ -16,11 +22,17 @@
                         "thumbnailHeight":  384,
                         "itemsBaseURL":     "",
                         "thumbnailLabel":     { "disable": true },
-                        "thumbnailHoverEffect2": "borderDarker|labelAppear75"
+                        "thumbnailHoverEffect2": "borderDarker|labelAppear75",
+                        "viewerToolbar":    {
+                               "standard":  "",
+                               "minimized": "minimizeButton, label, fullscreenButton, downloadButton, infoButton" },
+                         "viewerTools":      {
+                               "topLeft":   "label",
+                               "topRight":  "playPauseButton, zoomButton, fullscreenButton, shareButton, downloadButton, closeButton" }
                       }' >
                 {{ range $i, $p := .Album.Images }}
                    <a href="_/{{ $p.Resize.LargeX.RelPath | BasePath }}" data-ngThumb="_/{{ $p.Resize.SmallY.RelPath | BasePath }}" data-ngdownloadurl="{{ RelPath $.Album.OutPath $p.OutPath }}">
-                       {{ if $p.Description }}{{ $p.Description }}{{ else }}Untitled{{ end }}
+                       {{ if $p.Title }}{{ $p.Title }}{{ else }}Untitled{{ end }}
                    </a>
                 {{ end }}
                </div>
