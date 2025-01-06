@@ -45,7 +45,7 @@ func read(path string, et *exiftool.Exiftool) (Image, error) {
 
 	i.LensModel, err = fi.GetString("LensModel")
 	if err != nil {
-		klog.Errorf("unable to get LensModel: %w", err)
+		klog.V(1).Infof("unable to get LensModel: %w", err)
 	}
 
 	i.Height, err = fi.GetInt("ImageHeight")

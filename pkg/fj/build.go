@@ -13,11 +13,11 @@ import (
 	"k8s.io/klog/v2"
 )
 
-//go:embed assets/ng2/stream.tmpl
+//go:embed assets/ng2/recent.tmpl
 var streamTmpl string
 
-//go:embed assets/ng2/album_index.tmpl
-var albumIdxTmpl string
+//go:embed assets/ng2/index.tmpl
+var idxTmpl string
 
 //go:embed assets/ng2/album.tmpl
 var albumTmpl string
@@ -48,6 +48,7 @@ func Build(inDir string, outDir string) error {
 				InPath:  rd,
 				OutPath: filepath.Join(outDir, rd),
 				Images:  []*Image{},
+				Title:   filepath.Base(rd),
 			}
 		}
 		albums[rd].Images = append(albums[rd].Images, i)
@@ -97,24 +98,24 @@ func copyAssets(inDir string, outDir string) error {
 
 func writeStream(outDir string, is []*Image) error {
 	klog.Infof("writing stream with %d images ...", len(is))
-	bs, err := renderAlbum(&Album{Title: "Daily Photos", Images: is, OutPath: outDir}, streamTmpl)
+	bs, err := renderAlbum(&Album{Title: "Recent", Images: is, OutPath: outDir}, streamTmpl)
 	if err != nil {
 		return fmt.Errorf("render stream: %w", err)
 	}
 
-	p := filepath.Join(outDir, "index.html")
+	p := filepath.Join(outDir, "recent.html")
 	klog.Infof("Writing stream index to %s", p)
 	return ioutil.WriteFile(p, bs, 0o600)
 }
 
 func writeAlbumIndex(outDir string, as []*Album) error {
 	klog.Infof("writing album index with %d albums ...", len(as))
-	bs, err := renderAlbumIndex("Albums", outDir, as, albumIdxTmpl)
+	bs, err := renderAlbumIndex("Albums", outDir, as, idxTmpl)
 	if err != nil {
 		return fmt.Errorf("render albums: %w", err)
 	}
 
-	p := filepath.Join(outDir, "albums.html")
+	p := filepath.Join(outDir, "index.html")
 	klog.Infof("Writing album index to %s", p)
 	return ioutil.WriteFile(p, bs, 0o600)
 }
@@ -173,9 +174,10 @@ func renderAlbumIndex(title string, outDir string, as []*Album, ts string) ([]by
 	}
 
 	data := struct {
-		Title  string
-		OutDir string
-		Albums []*Album
+		Title     string
+		OutDir    string
+		Albums    []*Album
+		Favorites []*Album
 	}{
 		Title:  title,
 		OutDir: outDir,

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- album_index.tmpl -->
+<!-- index.tmpl -->
 <html lang="en">
 
 <head>
@@ -15,11 +15,29 @@
   </head>
 
 <body>
-    <ul>
-    {{ range $i, $a := .Albums }}
-    <li>{{ $a.StartTime.Format "2006-01-02" }}<a href="{{ RelPath $.OutDir $a.OutPath }}">{{ $a.OutPath | BasePath }}</a></li>
+
+<h1>photos</h1>
+
+<h2>latest</h2>
+
+<ul>
+<li><a href="recent.html">recent</a> [rss]</li>
+</ul>
+
+<h2>favorites</h2>
+
+<ul>
+    {{ range $i, $a := .Favorites }}
+    <li><a href="{{ RelPath $.OutDir $a.OutPath }}">{{ $a.OutPath | BasePath }}</a></li>
     {{ end }}
-    </ul>
+</ul>
+
+<h2>albums</h2>
+<ul>
+    {{ range $i, $a := .Albums }}
+    <li><a href="{{ RelPath $.OutDir $a.OutPath }}">{{ $a.OutPath | BasePath }}</a></li>
+    {{ end }}
+</ul>
 </body>
 
 </html>

@@ -26,9 +26,9 @@ type ThumbOpts struct {
 }
 
 var defaultThumbOpts = map[string]ThumbOpts{
-	"SmallY":  {Y: 384, Quality: 80},
-	"SmallX":  {X: 384, Quality: 80},
-	"MediumX": {X: 512, Quality: 85},
+	"SmallY":  {Y: 480, Quality: 80},
+	"SmallX":  {X: 480, Quality: 80},
+	"MediumX": {X: 640, Quality: 85},
 	"LargeX":  {X: 2048, Quality: 85},
 }
 

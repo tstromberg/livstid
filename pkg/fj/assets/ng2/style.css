@@ -1,0 +1,106 @@
+body {
+    background-color: #15110c;
+    color: #fff;
+    margin-top: 0;
+    font-family: "Alegreya", serif;
+}
+
+.entry {
+    display: flex;
+}
+
+.neg-col {
+    min-width: 30%;
+    max-width: 30%;
+    background: #2b2218;
+    padding: 3px 5px;
+}
+
+.neg-col img {
+    width: 100%;
+}
+
+.spacer-col {
+    min-width: 10%;
+    max-width: 10%;
+}
+
+.date-col {
+    min-width: 1em;
+    max-width: 1em;
+    padding-top: 1em;
+    padding-left: 0.3em;
+    background-color: #362b1f;
+    color: #f0bd0a;
+    writing-mode: vertical-rl;
+    font-family: "Helvetica";
+    font-size: medium;
+}
+
+.unused-col {
+    min-width: 1em;
+    max-width: 1em;
+    padding-top: 1em;
+    padding-left: 0.3em;
+    background-color: #362b1f;
+    color: #f0bd0a;
+    writing-mode: vertical-rl;
+    font-family: "Helvetica";
+    font-size: small;
+}
+
+.meta-col {
+    padding-top: 1em;
+    padding-left: 2em;
+    width: 60%;
+    border-bottom: 1px dotted #2b2218;
+}
+
+.hole-left-col {
+    width: 40px;
+    min-width: 40px;
+    background-image: url("film.png");
+    background-repeat: repeat-y;
+    background-size: 100%;
+}
+
+.hole-right-col {
+    width: 40px;
+    min-width: 40px;
+    background-image: url("film.png");
+    background-repeat: repeat-y;
+    background-size: 100%;
+}
+
+.neg img {
+    max-width: 100%;
+    height: auto;
+}
+
+.title a {
+    font-size: 140%;
+    color: #fff;
+    font-weight: 700;
+}
+
+a:link {
+    color: #fff;
+}
+
+a:visited {
+    color: #88735c;
+}
+
+a {
+    text-decoration-color: #f0bd0a;
+}
+
+.desc {
+    font-size: 120%;
+    color: #eee;
+}
+
+.exif {
+    font-style: italic;
+    color: #68533c;
+}
