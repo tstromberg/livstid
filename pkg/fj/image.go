@@ -18,10 +18,8 @@ type Image struct {
 	RelPath string
 	Hier    []string
 
-	Thumbnails map[string]ThumbMeta
-	ThumbPath  string
-
-	Taken time.Time
+	Resize map[string]ThumbMeta
+	Taken  time.Time
 
 	Keywords    []string
 	Title       string

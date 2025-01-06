@@ -13,16 +13,16 @@ import (
 	"k8s.io/klog/v2"
 )
 
-//go:embed assets/filmstrip/stream.tmpl
+//go:embed assets/ng2/stream.tmpl
 var streamTmpl string
 
-//go:embed assets/filmstrip/album_index.tmpl
+//go:embed assets/ng2/album_index.tmpl
 var albumIdxTmpl string
 
-//go:embed assets/filmstrip/album.tmpl
+//go:embed assets/ng2/album.tmpl
 var albumTmpl string
 
-var assetsDir = "pkg/fj/assets/filmstrip"
+var assetsDir = "pkg/fj/assets/ng2"
 
 func Build(inDir string, outDir string) error {
 	klog.Infof("build: %s -> %s", inDir, outDir)
@@ -35,18 +35,10 @@ func Build(inDir string, outDir string) error {
 
 	for _, i := range is {
 		klog.Infof("build image: %+v", i)
-		i.Thumbnails, err = thumbnails(*i, outDir)
+		i.Resize, err = thumbnails(*i, outDir)
 		if err != nil {
 			return fmt.Errorf("thumbnails: %w", err)
 		}
-
-		i.ThumbPath = i.Thumbnails["512x"].RelPath
-
-		if i.ThumbPath == "" {
-			return fmt.Errorf("unable to find thumb for %+v", i)
-		}
-
-		klog.Infof("thumbpath: %s", i.ThumbPath)
 
 		rd := filepath.Dir(i.RelPath)
 		i.OutPath = filepath.Join(outDir, i.RelPath)
@@ -104,6 +96,7 @@ func copyAssets(inDir string, outDir string) error {
 }
 
 func writeStream(outDir string, is []*Image) error {
+	klog.Infof("writing stream with %d images ...", len(is))
 	bs, err := renderAlbum(&Album{Title: "Daily Photos", Images: is, OutPath: outDir}, streamTmpl)
 	if err != nil {
 		return fmt.Errorf("render stream: %w", err)
@@ -115,6 +108,7 @@ func writeStream(outDir string, is []*Image) error {
 }
 
 func writeAlbumIndex(outDir string, as []*Album) error {
+	klog.Infof("writing album index with %d albums ...", len(as))
 	bs, err := renderAlbumIndex("Albums", outDir, as, albumIdxTmpl)
 	if err != nil {
 		return fmt.Errorf("render albums: %w", err)
@@ -127,6 +121,7 @@ func writeAlbumIndex(outDir string, as []*Album) error {
 
 func writeAlbums(as []*Album) error {
 	for _, a := range as {
+		klog.Infof("rendering album %s with %d images ...", a.OutPath, len(a.Images))
 		bs, err := renderAlbum(a, albumTmpl)
 		if err != nil {
 			return fmt.Errorf("render album: %w", err)

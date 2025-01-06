@@ -26,9 +26,10 @@ type ThumbOpts struct {
 }
 
 var defaultThumbOpts = map[string]ThumbOpts{
-	"133y":  {Y: 133, Quality: 75},
-	"512x":  {X: 512, Quality: 80},
-	"2048x": {X: 2048, Quality: 85},
+	"SmallY":  {Y: 384, Quality: 80},
+	"SmallX":  {X: 384, Quality: 80},
+	"MediumX": {X: 512, Quality: 85},
+	"LargeX":  {X: 2048, Quality: 85},
 }
 
 func thumbnails(i Image, outDir string) (map[string]ThumbMeta, error) {
@@ -176,6 +177,6 @@ func thumbRelPath(i Image, t ThumbOpts) string {
 	}
 
 	// ModTimeFormat is important to catch minor adjustments
-	newBase := fmt.Sprintf("%s_%s_%s@%s_%s.jpg", noExt, i.Title, i.Taken.Format(ThumbDateFormat), dimensions, i.ModTime.Format(ModTimeFormat))
+	newBase := fmt.Sprintf("%s_%s@%s_%s.jpg", noExt, i.Title, dimensions, i.ModTime.Format(ModTimeFormat))
 	return filepath.Join(thumbDir, newBase)
 }
