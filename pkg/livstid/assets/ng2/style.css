@@ -1,8 +1,8 @@
 body {
-    background-color: #15110c;
+    background-color: #212121;
     color: #fff;
     margin: 1em;
-    font-family: "Alegreya", serif;
+    font-family: Lora, serif;
 }
 
 .entry {
@@ -12,8 +12,8 @@ body {
 .neg-col {
     min-width: 30%;
     max-width: 30%;
-    background: #2b2218;
-    padding: 3px 5px;
+    background: #131313;
+    padding: 4px 8px;
 }
 
 .neg-col img {
@@ -30,7 +30,7 @@ body {
     max-width: 1em;
     padding-top: 1em;
     padding-left: 0.3em;
-    background-color: #362b1f;
+    background-color: #131313;
     color: #f0bd0a;
     writing-mode: vertical-rl;
     font-family: "Helvetica";
@@ -42,7 +42,7 @@ body {
     max-width: 1em;
     padding-top: 1em;
     padding-left: 0.3em;
-    background-color: #362b1f;
+    background-color: #131313;
     color: #f0bd0a;
     writing-mode: vertical-rl;
     font-family: "Helvetica";
@@ -53,23 +53,6 @@ body {
     padding-top: 1em;
     padding-left: 2em;
     width: 60%;
-    border-bottom: 1px dotted #2b2218;
-}
-
-.hole-left-col {
-    width: 40px;
-    min-width: 40px;
-    background-image: url("film.png");
-    background-repeat: repeat-y;
-    background-size: 100%;
-}
-
-.hole-right-col {
-    width: 40px;
-    min-width: 40px;
-    background-image: url("film.png");
-    background-repeat: repeat-y;
-    background-size: 100%;
 }
 
 .neg img {
