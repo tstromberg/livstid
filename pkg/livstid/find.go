@@ -1,4 +1,4 @@
-package fj
+package livstid
 
 import (
 	"fmt"
@@ -39,14 +39,7 @@ func read(path string, et *exiftool.Exiftool) (Image, error) {
 	}
 
 	i.LensMake, err = fi.GetString("LensMake")
-	if err != nil {
-		klog.Errorf("unable to get LensMake: %w", err)
-	}
-
 	i.LensModel, err = fi.GetString("LensModel")
-	if err != nil {
-		klog.V(1).Infof("unable to get LensModel: %w", err)
-	}
 
 	i.Height, err = fi.GetInt("ImageHeight")
 	if err != nil {

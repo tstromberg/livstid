@@ -1,4 +1,4 @@
-package fj
+package livstid
 
 import (
 	"time"
@@ -9,6 +9,7 @@ type ThumbMeta struct {
 	X       int
 	Y       int
 	RelPath string
+	Path    string
 }
 
 type Image struct {

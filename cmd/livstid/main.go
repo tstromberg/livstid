@@ -8,7 +8,7 @@ import (
 
 	"k8s.io/klog/v2"
 
-	"github.com/tstromberg/fj/pkg/fj"
+	fj "github.com/tstromberg/livstid/pkg/livstid"
 )
 
 var (

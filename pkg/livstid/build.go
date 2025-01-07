@@ -1,4 +1,4 @@
-package fj
+package livstid
 
 import (
 	"bytes"
@@ -6,8 +6,11 @@ import (
 	"fmt"
 	"html/template"
 	"io/ioutil"
+	"os"
 	"path/filepath"
+	"slices"
 	"sort"
+	"strings"
 
 	"github.com/otiai10/copy"
 	"k8s.io/klog/v2"
@@ -22,17 +25,20 @@ var idxTmpl string
 //go:embed assets/ng2/album.tmpl
 var albumTmpl string
 
-var assetsDir = "pkg/fj/assets/ng2"
+var assetsDir = "pkg/livstid/assets/ng2"
+
+var favKeyword = "fav"
 
 func Build(inDir string, outDir string) error {
 	klog.Infof("build: %s -> %s", inDir, outDir)
 
-	albums := map[string]*Album{}
 	is, err := Find(inDir)
 	if err != nil {
 		return fmt.Errorf("find: %w", err)
 	}
 
+	albums := map[string]*Album{}
+	favs := map[string]*Album{}
 	for _, i := range is {
 		klog.Infof("build image: %+v", i)
 		i.Resize, err = thumbnails(*i, outDir)
@@ -49,9 +55,32 @@ func Build(inDir string, outDir string) error {
 				OutPath: filepath.Join(outDir, rd),
 				Images:  []*Image{},
 				Title:   filepath.Base(rd),
+				Hier:    strings.Split(rd, string(filepath.Separator)),
 			}
 		}
 		albums[rd].Images = append(albums[rd].Images, i)
+
+		if !slices.Contains(i.Keywords, favKeyword) {
+			continue
+		}
+
+		for _, k := range i.Keywords {
+			if k == favKeyword {
+				k = "all"
+			}
+
+			if favs[k] == nil {
+				favs[k] = &Album{
+					InPath:  rd,
+					OutPath: filepath.Join(outDir, "tags", k),
+					Images:  []*Image{},
+					Title:   k,
+					Hier:    []string{"tags", k},
+				}
+			}
+			favs[k].Images = append(favs[k].Images, i)
+
+		}
 	}
 
 	if err := copyAssets(assetsDir, outDir); err != nil {
@@ -66,14 +95,24 @@ func Build(inDir string, outDir string) error {
 	for _, a := range albums {
 		as = append(as, a)
 	}
-	// TODO: Sort by date
 
-	if err := writeAlbumIndex(outDir, as); err != nil {
-		return fmt.Errorf("write stream: %w", err)
+	fs := []*Album{}
+	for _, f := range favs {
+		if len(f.Images) > 1 {
+			fs = append(fs, f)
+		}
+	}
+
+	if err := writeAlbumIndex(outDir, as, fs); err != nil {
+		return fmt.Errorf("write album index: %w", err)
 	}
 
 	if err := writeAlbums(as); err != nil {
-		return fmt.Errorf("write stream: %w", err)
+		return fmt.Errorf("write albums: %w", err)
+	}
+
+	if err := writeAlbums(fs); err != nil {
+		return fmt.Errorf("write favorites: %w", err)
 	}
 
 	return nil
@@ -108,9 +147,9 @@ func writeStream(outDir string, is []*Image) error {
 	return ioutil.WriteFile(p, bs, 0o600)
 }
 
-func writeAlbumIndex(outDir string, as []*Album) error {
+func writeAlbumIndex(outDir string, as []*Album, fs []*Album) error {
 	klog.Infof("writing album index with %d albums ...", len(as))
-	bs, err := renderAlbumIndex("Albums", outDir, as, idxTmpl)
+	bs, err := renderAlbumIndex("Albums", outDir, as, fs, idxTmpl)
 	if err != nil {
 		return fmt.Errorf("render albums: %w", err)
 	}
@@ -128,10 +167,14 @@ func writeAlbums(as []*Album) error {
 			return fmt.Errorf("render album: %w", err)
 		}
 
+		if err := os.MkdirAll(a.OutPath, 0o755); err != nil {
+			return fmt.Errorf("mkdir: %w", err)
+		}
+
 		p := filepath.Join(filepath.Join(a.OutPath, "index.html"))
 		klog.Infof("Writing album index to %s", p)
 
-		if p := ioutil.WriteFile(p, bs, 0o600); p != nil {
+		if err := os.WriteFile(p, bs, 0o600); err != nil {
 			return fmt.Errorf("write file: %w", err)
 		}
 	}
@@ -167,10 +210,14 @@ func renderAlbum(a *Album, ts string) ([]byte, error) {
 	return out, nil
 }
 
-func renderAlbumIndex(title string, outDir string, as []*Album, ts string) ([]byte, error) {
+func renderAlbumIndex(title string, outDir string, as []*Album, fs []*Album, ts string) ([]byte, error) {
 	tmpl, err := template.New("album index").Funcs(tmplFunctions()).Parse(ts)
 	if err != nil {
 		return nil, fmt.Errorf("parse: %w", err)
+	}
+
+	if err := os.MkdirAll(filepath.Dir(outDir), 0o755); err != nil {
+		return nil, fmt.Errorf("mkdir: %w", err)
 	}
 
 	data := struct {
@@ -179,9 +226,10 @@ func renderAlbumIndex(title string, outDir string, as []*Album, ts string) ([]by
 		Albums    []*Album
 		Favorites []*Album
 	}{
-		Title:  title,
-		OutDir: outDir,
-		Albums: as,
+		Title:     title,
+		OutDir:    outDir,
+		Albums:    as,
+		Favorites: fs,
 	}
 
 	var tpl bytes.Buffer

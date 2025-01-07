@@ -1,4 +1,4 @@
-package fj
+package livstid
 
 import (
 	"fmt"
@@ -133,17 +133,16 @@ func createThumb(i image.Image, path string, t ThumbOpts) (*ThumbMeta, error) {
 
 	if t.Y == 0 {
 		scale := float64(i.Bounds().Dx()) / float64(t.X)
-		klog.V(1).Infof("scale = %d (%d / %d)", scale, i.Bounds().Dx(), t.X)
 		y = int(float64(i.Bounds().Dy()) / scale)
 	}
 
 	rimg := transform.Resize(i, x, y, transform.Lanczos)
 	if err := imgio.Save(path, rimg, imgio.JPEGEncoder(t.Quality)); err != nil {
-		klog.Errorf("save failed: %w", err)
+		klog.Errorf("save failed: %s", err)
 		return nil, fmt.Errorf("save: %w", err)
 	}
 
-	return &ThumbMeta{X: rimg.Bounds().Dx(), Y: rimg.Bounds().Dy()}, nil
+	return &ThumbMeta{X: rimg.Bounds().Dx(), Y: rimg.Bounds().Dy(), Path: path}, nil
 }
 
 func readThumb(path string) (*ThumbMeta, error) {
@@ -158,7 +157,7 @@ func readThumb(path string) (*ThumbMeta, error) {
 		return nil, fmt.Errorf("unable to decode: %w", err)
 	}
 
-	return &ThumbMeta{X: ic.Width, Y: ic.Height}, nil
+	return &ThumbMeta{X: ic.Width, Y: ic.Height, Path: path}, nil
 }
 
 // thumbRelPath returns a relative path to a thumbnail, optimizing for both cache busting and SEO.
