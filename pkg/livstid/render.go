@@ -7,7 +7,6 @@ import (
 	"html/template"
 	"os"
 	"path/filepath"
-	"sort"
 
 	"math/rand"
 
@@ -120,11 +119,6 @@ func renderAlbum(c *Config, a *Album, templateString string) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("parse: %w", err)
 	}
-
-	is := a.Images
-	sort.Slice(is, func(i, j int) bool {
-		return is[i].Taken.After(is[j].Taken)
-	})
 
 	data := struct {
 		Title      string

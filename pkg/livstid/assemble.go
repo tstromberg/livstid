@@ -81,8 +81,18 @@ func Collect(c *Config) (*Assembly, error) {
 
 	as := []*Album{}
 	for _, a := range albums {
+		is := a.Images
+		sort.Slice(is, func(i, j int) bool {
+			return is[i].Taken.Before(is[j].Taken)
+		})
+		a.Images = is
+		for i, p := range a.Images {
+			klog.Infof("%s: %d = %s [%s] (taken=%s)", a.Title, i, p.InPath, p.Title, p.Taken)
+		}
+		a.Title = a.Title + " (sorted)"
 		as = append(as, a)
 	}
+
 	sort.Slice(as, func(i, j int) bool {
 		return as[i].InPath > as[j].InPath
 	})
@@ -98,6 +108,12 @@ func Collect(c *Config) (*Assembly, error) {
 	if len(recent.Images) > maxAlbum {
 		recent.Images = recent.Images[0:maxAlbum]
 	}
+
+	ri := recent.Images
+	sort.Slice(ri, func(i, j int) bool {
+		return ri[i].Taken.After(ri[j].Taken)
+	})
+	recent.Images = ri
 
 	return &Assembly{
 		Images:    is,
