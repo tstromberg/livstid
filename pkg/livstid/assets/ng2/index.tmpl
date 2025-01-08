@@ -20,22 +20,42 @@
 
 <p class="description">{{.Description}}</p>
 
-<div class="section">
+
+<section>
 <h2>latest</h2>
 
-<ul>
-<li><a href="recent.html">recent</a></li>
-</ul>
+<div class="flex">
+<div class="attractor">
+{{ $p := .Recents | Random }}
+<a href="{{ RelPath .OutDir $p.OutPath }}"><img src="{{ $p.Resize.SmallX.RelPath }}"></a>
 </div>
 
-<div class="section">
+<div class="items">
+<ul>
+<li><a href="recent.html">recent photo stream</a></li>
+</ul>
+</div>
+</div>
+
+</section>
+
 <h2>favorites</h2>
 
+<section>
+<div class="flex">
+<div class="attractor">
+{{ $p := .Favorites | Random }}
+<a href="{{ RelPath .OutDir $p.OutPath }}"><img src="{{ $p.Resize.SmallX.RelPath }}"></a>
+</div>
+
+<div class="items">
 <ul>
     {{ range $i, $a := .Favorites }}
     <li><a href="{{ RelPath $.OutDir $a.OutPath }}">{{ $a.OutPath | BasePath }}</a></li>
     {{ end }}
 </ul>
+</div>
+</div>
 </section>
 
 <h2>albums</h2>
@@ -46,11 +66,21 @@
             {{ if ne $last "" }}
                 </ul>
                 </div>
+                </div>
+                </section>
             {{ end }}
-            <div class="section">
+            <section>
             <h3 class="hier">
                 {{ $top }}
             </h3>
+
+            <div class="flex">
+            <div class="attractor">
+            {{ $p := (RandInHier $.Albums $top) }}
+            <a href="{{ RelPath $.OutDir $p.OutPath }}"><img src="{{ $p.Resize.SmallX.RelPath }}"></a>
+            </div>
+
+            <div class="items">
             <ul>
         {{ end }}
         <li><a href="{{ RelPath $.OutDir $a.OutPath }}">{{ $a.OutPath | BasePath }}</a></li>
@@ -58,6 +88,8 @@
     {{ end }}
 </ul>
 </div>
+</div>
+</section>
 </body>
 
 </html>

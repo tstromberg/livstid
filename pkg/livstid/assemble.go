@@ -11,6 +11,7 @@ import (
 )
 
 var favKeyword = "fav"
+var maxAlbum = 24
 
 // an Assembly is an assembled collection of images.
 type Assembly struct {
@@ -83,7 +84,7 @@ func Collect(c *Config) (*Assembly, error) {
 		as = append(as, a)
 	}
 	sort.Slice(as, func(i, j int) bool {
-		return as[i].InPath < as[j].InPath
+		return as[i].InPath > as[j].InPath
 	})
 
 	fs := []*Album{}
@@ -94,8 +95,8 @@ func Collect(c *Config) (*Assembly, error) {
 	}
 
 	recent := &Album{Title: "Recent", Images: is, OutPath: outDir}
-	if len(recent.Images) > 60 {
-		recent.Images = recent.Images[0:60]
+	if len(recent.Images) > maxAlbum {
+		recent.Images = recent.Images[0:maxAlbum]
 	}
 
 	return &Assembly{

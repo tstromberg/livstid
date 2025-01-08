@@ -6,15 +6,29 @@ body {
     font-family: Lora, serif;
 }
 
+.flex {
+    display: flex;
+    flex-wrap: nowrap;
+}
+
+section img {
+    width: 96px;
+    border: 2px solid #000;
+    margin-left: 0.5em;
+}
+
+div.items ul {
+    margin: 0;
+}
+
 p {
     color: #999;
     font-style: italic;
 }
 
 h3.hier {
-    margin-left: 0.5em;
-    margin-bottom: 0;
-    padding-bottom: 0;
+    color: #999;
+    margin-bottom: 0.5em;
 }
 
 .entry {

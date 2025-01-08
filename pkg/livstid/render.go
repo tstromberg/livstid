@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 	"sort"
 
+	"math/rand"
+
 	"github.com/otiai10/copy"
 	"k8s.io/klog/v2"
 )
@@ -155,12 +157,14 @@ func renderAlbumIndex(c *Config, a *Assembly, ts string) ([]byte, error) {
 		OutDir      string
 		Albums      []*Album
 		Favorites   []*Album
+		Recents     []*Album
 	}{
 		Collection:  c.Collection,
 		Description: c.Description,
 		OutDir:      c.OutDir,
 		Albums:      a.Albums,
 		Favorites:   a.Favorites,
+		Recents:     []*Album{a.Recent},
 	}
 
 	var tpl bytes.Buffer
@@ -185,6 +189,23 @@ func tmplFunctions() template.FuncMap {
 			}
 			return r
 		},
+		"Random": func(as []*Album) *Image {
+			is := []*Image{}
+			for _, a := range as {
+				is = append(is, a.Images...)
+			}
+			return is[rand.Intn(len(is))]
+		},
+		"RandInHier": func(as []*Album, top string) *Image {
+			is := []*Image{}
+			for _, a := range as {
+				if a.Hier[0] == top {
+					is = append(is, a.Images...)
+				}
+			}
+			return is[rand.Intn(len(is))]
+		},
+
 		"BasePath": filepath.Base,
 	}
 }
