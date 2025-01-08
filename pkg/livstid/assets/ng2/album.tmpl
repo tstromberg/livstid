@@ -1,7 +1,8 @@
 <!DOCTYPE html>
-<!-- index.tmpl -->
+<!-- album.tmpl -->
 <html lang="en">
         <head>
+            <meta charset="utf-8">
             <title>{{.Collection}} &mdash; {{.Title}}</title>
             <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1">
             <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js" type="text/javascript"></script>
@@ -12,7 +13,7 @@
         </head>
         <body>
 
-              <h1>{{.Collection}}
+              <h1><a href="../..">{{.Collection}}</a>
               {{ range $i, $p := .Album.Hier }}
               &gt {{ $p }}
               {{ end }}
