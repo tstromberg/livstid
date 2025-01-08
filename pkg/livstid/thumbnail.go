@@ -89,7 +89,7 @@ func thumbnails(i Image, outDir string) (map[string]ThumbMeta, error) {
 				thumbs[name] = *rt
 				continue
 			}
-			klog.Warningf("unable to read thumb: %w", err)
+			klog.Warningf("unable to read thumb: %v", err)
 		}
 
 		if img == nil {
@@ -101,7 +101,7 @@ func thumbnails(i Image, outDir string) (map[string]ThumbMeta, error) {
 
 		ct, err := createThumb(img, fullPath, t)
 		if err != nil {
-			klog.Errorf("create failed: %w", err)
+			klog.Errorf("create failed: %v", err)
 			return nil, fmt.Errorf("create thumb: %w", err)
 		}
 

@@ -8,12 +8,14 @@ import (
 
 	"k8s.io/klog/v2"
 
-	fj "github.com/tstromberg/livstid/pkg/livstid"
+	livstid "github.com/tstromberg/livstid/pkg/livstid"
 )
 
 var (
-	inDir  = flag.String("in", "", "Location of input directory")
-	outDir = flag.String("out", "", "Location of output directory")
+	inDir       = flag.String("in", "", "Location of input directory")
+	outDir      = flag.String("out", "", "Location of output directory")
+	title       = flag.String("title", "livstid 📸", "Title of photo collection")
+	description = flag.String("description", "(insert description here)", "description of photo collection")
 )
 
 /*
@@ -34,7 +36,19 @@ func main() {
 		klog.Exitf("--out is a required flag")
 	}
 
-	if err := fj.Build(*inDir, *outDir); err != nil {
+	c := &livstid.Config{
+		InDir:       *inDir,
+		OutDir:      *outDir,
+		Collection:  *title,
+		Description: *description,
+	}
+
+	a, err := livstid.Collect(c)
+	if err != nil {
 		klog.Exitf("build failed: %v", err)
+	}
+
+	if err := livstid.Render(c, a); err != nil {
+		klog.Exitf("render failed: %v", err)
 	}
 }

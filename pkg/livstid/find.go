@@ -70,21 +70,14 @@ func read(path string, et *exiftool.Exiftool) (Image, error) {
 	if err != nil {
 		return i, fmt.Errorf("get FocalLength: %w", err)
 	}
+
 	i.FocalLength = strings.ReplaceAll(i.FocalLength, ".0", "")
-
 	i.Keywords, err = fi.GetStrings("Keywords")
-	if err != nil {
-		klog.V(2).Infof("unable to get keywords: %w", err)
-	}
-
 	i.Description, err = fi.GetString("ImageDescription")
-	if err != nil {
-		klog.V(2).Infof("unable to get description: %w", err)
-	}
 
 	i.Title, err = fi.GetString("Headline")
 	if err != nil {
-		klog.V(2).Infof("unable to get headline: %w", err)
+		klog.V(2).Infof("unable to get headline: %v", err)
 	}
 
 	ds, err := fi.GetString("DateTimeOriginal")
@@ -119,7 +112,7 @@ func Find(root string) ([]*Image, error) {
 				klog.Infof("found %s", path)
 				i, err := read(path, et)
 				if err != nil {
-					klog.Errorf("read failure: %w", err)
+					klog.Errorf("read failure: %v", err)
 					return err
 				}
 
@@ -133,7 +126,7 @@ func Find(root string) ([]*Image, error) {
 
 				fi, err := os.Stat(path)
 				if err != nil {
-					klog.Errorf("stat failure: %w", err)
+					klog.Errorf("stat failure: %v", err)
 					return err
 				}
 
