@@ -44,4 +44,21 @@
               <!-- ### end of the gallery definition ### -->
 
           </body>
+
+
+<script>
+    function addTrailingSlash() {
+        if (window.location.pathname.endsWith('/') === false && window.location.protocol !== "file:") {
+            var url = window.location.protocol + '//' +
+                window.location.host +
+                window.location.pathname + '/' +
+                window.location.search;
+
+
+            window.location.replace(url);
+        }
+    }
+    addTrailingSlash();
+</script>
+
       </html>
