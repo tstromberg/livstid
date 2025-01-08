@@ -2,7 +2,19 @@ body {
     background-color: #212121;
     color: #fff;
     margin: 1em;
+    font-size: 110%;
     font-family: Lora, serif;
+}
+
+p {
+    color: #999;
+    font-style: italic;
+}
+
+h3.hier {
+    margin-left: 0.5em;
+    margin-bottom: 0;
+    padding-bottom: 0;
 }
 
 .entry {
@@ -11,7 +23,7 @@ body {
 
 .neg-col {
     min-width: 30%;
-    max-width: 30%;
+    max-width: 60%;
     background: #131313;
     padding: 4px 8px;
 }
@@ -52,11 +64,9 @@ body {
 .meta-col {
     padding-top: 1em;
     padding-left: 2em;
-    width: 60%;
 }
 
 .neg img {
-    max-width: 100%;
     height: auto;
 }
 
@@ -79,7 +89,6 @@ a {
 }
 
 .desc {
-    font-size: 120%;
     color: #eee;
 }
 

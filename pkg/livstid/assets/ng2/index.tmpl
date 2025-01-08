@@ -18,21 +18,25 @@
 
 <h1>{{.Collection}}</h1>
 
-<p>{{.Description}}</p>
+<p class="description">{{.Description}}</p>
 
-<h2>latest photos</h2>
+<div class="section">
+<h2>latest</h2>
 
 <ul>
-<li><a href="recent.html">recent</a> [rss]</li>
+<li><a href="recent.html">recent</a></li>
 </ul>
+</div>
 
-<h2>favorite photos</h2>
+<div class="section">
+<h2>favorites</h2>
 
 <ul>
     {{ range $i, $a := .Favorites }}
     <li><a href="{{ RelPath $.OutDir $a.OutPath }}">{{ $a.OutPath | BasePath }}</a></li>
     {{ end }}
 </ul>
+</section>
 
 <h2>albums</h2>
     {{ $last := "" }}
@@ -41,14 +45,19 @@
         {{ if ne $top $last }}
             {{ if ne $last "" }}
                 </ul>
+                </div>
             {{ end }}
-            <h3>{{ $top }}</h3>
+            <div class="section">
+            <h3 class="hier">
+                {{ $top }}
+            </h3>
             <ul>
         {{ end }}
         <li><a href="{{ RelPath $.OutDir $a.OutPath }}">{{ $a.OutPath | BasePath }}</a></li>
         {{ $last = $top }}
     {{ end }}
 </ul>
+</div>
 </body>
 
 </html>
