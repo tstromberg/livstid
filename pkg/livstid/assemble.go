@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"slices"
+	"sort"
 	"strings"
 
 	"k8s.io/klog/v2"
@@ -81,6 +82,9 @@ func Collect(c *Config) (*Assembly, error) {
 	for _, a := range albums {
 		as = append(as, a)
 	}
+	sort.Slice(as, func(i, j int) bool {
+		return as[i].InPath < as[j].InPath
+	})
 
 	fs := []*Album{}
 	for _, f := range favs {

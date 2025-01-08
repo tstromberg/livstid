@@ -35,9 +35,18 @@
 </ul>
 
 <h2>albums</h2>
-<ul>
+    {{ $last := "" }}
     {{ range $i, $a := .Albums }}
-    <li><a href="{{ RelPath $.OutDir $a.OutPath }}">{{ $a.OutPath | BasePath }}</a></li>
+        {{ $top := (index $a.Hier 0) }}
+        {{ if ne $top $last }}
+            {{ if ne $last "" }}
+                </ul>
+            {{ end }}
+            <h3>{{ $top }}</h3>
+            <ul>
+        {{ end }}
+        <li><a href="{{ RelPath $.OutDir $a.OutPath }}">{{ $a.OutPath | BasePath }}</a></li>
+        {{ $last = $top }}
     {{ end }}
 </ul>
 </body>
