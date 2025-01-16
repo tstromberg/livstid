@@ -105,14 +105,16 @@ func Collect(c *Config) (*Assembly, error) {
 	}
 
 	recent := &Album{Title: "Recent", Images: is, OutPath: outDir}
-	if len(recent.Images) > maxAlbum {
-		recent.Images = recent.Images[0:maxAlbum]
-	}
 
 	ri := recent.Images
 	sort.Slice(ri, func(i, j int) bool {
 		return ri[i].Taken.After(ri[j].Taken)
 	})
+
+	if len(ri.Images) > maxAlbum {
+		ri.Images = ri.Images[0:maxAlbum]
+	}
+
 	recent.Images = ri
 
 	return &Assembly{
