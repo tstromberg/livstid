@@ -111,8 +111,8 @@ func Collect(c *Config) (*Assembly, error) {
 		return ri[i].Taken.After(ri[j].Taken)
 	})
 
-	if len(ri.Images) > maxAlbum {
-		ri.Images = ri.Images[0:maxAlbum]
+	if len(ri) > maxAlbum {
+		ri = ri[0:maxAlbum]
 	}
 
 	recent.Images = ri
