@@ -12,9 +12,10 @@ body {
 }
 
 section img {
-    width: 96px;
+    width: 240px;
     border: 2px solid #000;
     margin-left: 0.5em;
+    filter: drop-shadow(4px 4px 4px rgba(0, 0, 0, 0.3));
 }
 
 div.items ul {
@@ -73,6 +74,7 @@ h3.hier {
     writing-mode: vertical-rl;
     font-family: "Helvetica";
     font-size: small;
+    filter: drop-shadow(8px 8px 8px rgba(0, 0, 0, 0.3));
 }
 
 .meta-col {

@@ -2,7 +2,9 @@ package livstid
 
 import (
 	"fmt"
+	"net/url"
 	"path/filepath"
+	"regexp"
 	"slices"
 	"sort"
 	"strings"
@@ -12,6 +14,8 @@ import (
 
 var favKeyword = "fav"
 var maxAlbum = 24
+var entityChar = regexp.MustCompile(`\%[0-9A-Fa-f]{2,4}`)
+var multipleUnderscores = regexp.MustCompile(`_{2,}`)
 
 // an Assembly is an assembled collection of images.
 type Assembly struct {
@@ -19,6 +23,26 @@ type Assembly struct {
 	Albums    []*Album
 	Favorites []*Album
 	Recent    *Album
+}
+
+func urlSafePath(in string) string {
+	o := []string{}
+	parts := strings.Split(in, "/")
+
+	for _, p := range parts {
+		p = url.QueryEscape(p)
+		p = strings.ReplaceAll(p, "%2C", ",")
+		p = strings.ReplaceAll(p, "+", "_")
+		p = entityChar.ReplaceAllString(p, "_")
+		p = strings.ReplaceAll(p, " ", "_")
+		p = strings.ReplaceAll(p, "_-_", "-")
+		p = multipleUnderscores.ReplaceAllString(p, "_")
+		o = append(o, p)
+	}
+
+	out := strings.Join(o, "/")
+	klog.Infof("%s -> %s", in, out)
+	return out
 }
 
 // Collect collects an assembly of photos
@@ -42,13 +66,14 @@ func Collect(c *Config) (*Assembly, error) {
 			return nil, fmt.Errorf("thumbnails: %w", err)
 		}
 
-		rd := filepath.Dir(i.RelPath)
-		i.OutPath = filepath.Join(outDir, i.RelPath)
+		safeRelPath := urlSafePath(i.RelPath)
+		rd := filepath.Dir(safeRelPath)
+		i.OutPath = filepath.Join(outDir, safeRelPath)
 
 		if albums[rd] == nil {
 			albums[rd] = &Album{
 				InPath:  rd,
-				OutPath: filepath.Join(outDir, rd),
+				OutPath: filepath.Join(outDir, urlSafePath(rd)),
 				Images:  []*Image{},
 				Title:   filepath.Base(rd),
 				Hier:    strings.Split(rd, string(filepath.Separator)),

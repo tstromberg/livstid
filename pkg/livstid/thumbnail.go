@@ -34,7 +34,7 @@ var defaultThumbOpts = map[string]ThumbOpts{
 
 func thumbnails(i Image, outDir string) (map[string]ThumbMeta, error) {
 	klog.Infof("creating thumbnails for %s in %s", i.InPath, outDir)
-	fullDest := filepath.Join(outDir, i.RelPath)
+	fullDest := filepath.Join(outDir, urlSafePath(i.RelPath))
 	klog.V(1).Infof("relpath: %s -- full dest: %s", i.RelPath, fullDest)
 
 	sst, err := os.Stat(i.InPath)
@@ -176,6 +176,6 @@ func thumbRelPath(i Image, t ThumbOpts) string {
 	}
 
 	// ModTimeFormat is important to catch minor adjustments
-	newBase := fmt.Sprintf("%s_%s@%s_%s.jpg", noExt, i.Title, dimensions, i.ModTime.Format(ModTimeFormat))
-	return filepath.Join(thumbDir, newBase)
+	newBase := fmt.Sprintf("%s@%s_%s.jpg", noExt, dimensions, i.ModTime.Format(ModTimeFormat))
+	return urlSafePath(filepath.Join(thumbDir, newBase))
 }
