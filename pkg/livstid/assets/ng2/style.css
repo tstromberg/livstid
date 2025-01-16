@@ -110,3 +110,8 @@ a {
     font-style: italic;
     color: #68533c;
 }
+
+/* Nanogallery2 overrides */
+.nGY2GThumbnail {
+    filter: drop-shadow(4px 4px 4px #111);
+}
