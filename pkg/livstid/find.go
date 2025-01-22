@@ -33,10 +33,14 @@ func read(path string, et *exiftool.Exiftool) (Image, error) {
 		klog.Warningf("unable to get make for %s: %v", path, err)
 	}
 
+	i.Make = strings.TrimSpace(strings.ReplaceAll(i.Make, "CORPORATION", ""))
+
 	i.Model, err = fi.GetString("Model")
 	if err != nil {
 		klog.V(1).Infof("unable to get model for %s: %v", path, err)
 	}
+
+	i.Model = strings.TrimSpace(strings.ReplaceAll(i.Model, i.Make, ""))
 
 	i.LensMake, err = fi.GetString("LensMake")
 	i.LensModel, err = fi.GetString("LensModel")
