@@ -152,14 +152,14 @@ func renderAlbumIndex(c *Config, a *Assembly, ts string) ([]byte, error) {
 		OutDir      string
 		Albums      []*Album
 		Favorites   []*Album
-		Recents     []*Album
+		Recent      *Album
 	}{
 		Collection:  c.Collection,
 		Description: c.Description,
 		OutDir:      c.OutDir,
 		Albums:      a.Albums,
 		Favorites:   a.Favorites,
-		Recents:     []*Album{a.Recent},
+		Recent:      a.Recent,
 	}
 
 	var tpl bytes.Buffer
@@ -201,7 +201,9 @@ func tmplFunctions() template.FuncMap {
 			}
 			return is[rand.Intn(len(is))]
 		},
-		"RandInHier": func(as []*Album, top string) *Image {
+		"First": func(a *Album) *Image {
+			return a.Images[0]
+		}, "RandInHier": func(as []*Album, top string) *Image {
 			is := []*Image{}
 			for _, a := range as {
 				if a.Hier[0] == top {

@@ -26,7 +26,7 @@
 
 <div class="flex">
 <div class="attractor">
-{{ $p := .Recents | Random }}
+{{ $p := .Recent | First }}
 <a href="{{ ImageURL .OutDir $p.OutPath }}"><img src="{{ $p.Resize.Tiny.RelPath }}"></a>
 </div>
 

@@ -37,8 +37,8 @@ h3.hier {
 }
 
 .neg-col {
-    min-width: 30%;
-    max-width: 60%;
+    min-width: 50%;
+    max-width: 50%;
     background: #131313;
     padding: 4px 8px;
 }
@@ -48,7 +48,7 @@ h3.hier {
 }
 
 .spacer-col {
-    min-width: 10%;
+    min-width: 5%;
     max-width: 10%;
 }
 
@@ -87,7 +87,7 @@ h3.hier {
 }
 
 .title a {
-    font-size: 140%;
+    font-size: 120%;
     color: #fff;
     font-weight: 700;
 }
