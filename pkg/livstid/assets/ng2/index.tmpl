@@ -83,7 +83,7 @@
             <div class="items">
             <ul>
         {{ end }}
-        <li><a href="{{ RelPath $.OutDir $a.OutPath }}">{{ $a.OutPath | BasePath }}</a></li>
+        <li><a href="{{ RelPath $.OutDir $a.OutPath }}">{{ $a.Title }}</a></li>
         {{ $last = $top }}
     {{ end }}
 </ul>

@@ -114,7 +114,6 @@ func Collect(c *Config) (*Assembly, error) {
 		for i, p := range a.Images {
 			klog.Infof("%s: %d = %s [%s] (taken=%s)", a.Title, i, p.InPath, p.Title, p.Taken)
 		}
-		a.Title = a.Title + " (sorted)"
 		as = append(as, a)
 	}
 

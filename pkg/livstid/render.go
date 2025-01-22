@@ -93,7 +93,7 @@ func writeIndex(c *Config, a *Assembly) error {
 
 func writeAlbums(c *Config, as []*Album) error {
 	for _, a := range as {
-		klog.Infof("rendering album %s with %d images ...", a.OutPath, len(a.Images))
+		klog.Infof("rendering album %s [%s] with %d images ...", a.Title, a.OutPath, len(a.Images))
 		bs, err := renderAlbum(c, a, albumTmpl)
 		if err != nil {
 			return fmt.Errorf("render album: %w", err)
