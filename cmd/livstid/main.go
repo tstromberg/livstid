@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"net/http"
 
 	_ "image/jpeg"
 	_ "image/png"
@@ -16,6 +17,8 @@ var (
 	outDir      = flag.String("out", "", "Location of output directory")
 	title       = flag.String("title", "livstid 📸", "Title of photo collection")
 	description = flag.String("description", "(insert description here)", "description of photo collection")
+	listen      = flag.Bool("listen", false, "serve content via HTTP")
+	addr        = flag.String("addr", "localhost:12800", "host:port to bind to in listen mode")
 )
 
 /*
@@ -50,5 +53,16 @@ func main() {
 
 	if err := livstid.Render(c, a); err != nil {
 		klog.Exitf("render failed: %v", err)
+	}
+
+	if *listen {
+		fs := http.FileServer(http.Dir(*outDir))
+		http.Handle("/", fs)
+
+		klog.Infof("Listening on %s...", *addr)
+		err := http.ListenAndServe(*addr, nil)
+		if err != nil {
+			klog.Exitf("listen failed: %v", err)
+		}
 	}
 }

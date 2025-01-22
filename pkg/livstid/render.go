@@ -184,6 +184,9 @@ func tmplFunctions() template.FuncMap {
 			return r
 		},
 		"Random": func(as []*Album) *Image {
+			if len(as) == 0 {
+				return &Image{}
+			}
 			is := []*Image{}
 			for _, a := range as {
 				is = append(is, a.Images...)

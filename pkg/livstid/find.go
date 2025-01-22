@@ -30,12 +30,12 @@ func read(path string, et *exiftool.Exiftool) (Image, error) {
 
 	i.Make, err = fi.GetString("Make")
 	if err != nil {
-		return i, fmt.Errorf("get Make: %w", err)
+		klog.Warningf("unable to get make for %s: %v", path, err)
 	}
 
 	i.Model, err = fi.GetString("Model")
 	if err != nil {
-		return i, fmt.Errorf("get Model: %w", err)
+		klog.V(1).Infof("unable to get model for %s: %v", path, err)
 	}
 
 	i.LensMake, err = fi.GetString("LensMake")
@@ -53,22 +53,22 @@ func read(path string, et *exiftool.Exiftool) (Image, error) {
 
 	i.ISO, err = fi.GetInt("ISO")
 	if err != nil {
-		return i, fmt.Errorf("get ISO: %w", err)
+		klog.V(1).Infof("unable to get ISO for %s: %v", path, err)
 	}
 
 	i.Aperture, err = fi.GetFloat("ApertureValue")
 	if err != nil {
-		return i, fmt.Errorf("get ApertureValue: %w", err)
+		klog.V(1).Infof("unable to get aperture for %s: %v", path, err)
 	}
 
 	i.Speed, err = fi.GetString("ShutterSpeed")
 	if err != nil {
-		return i, fmt.Errorf("get ShutterSpeed: %w", err)
+		klog.V(1).Infof("unable to get shutter speed for %s: %v", path, err)
 	}
 
 	i.FocalLength, err = fi.GetString("FocalLength")
 	if err != nil {
-		return i, fmt.Errorf("get FocalLength: %w", err)
+		klog.V(1).Infof("unable to get focal length for %s: %v", path, err)
 	}
 
 	i.FocalLength = strings.ReplaceAll(i.FocalLength, ".0", "")
@@ -82,7 +82,8 @@ func read(path string, et *exiftool.Exiftool) (Image, error) {
 
 	ds, err := fi.GetString("DateTimeOriginal")
 	if err != nil {
-		return i, fmt.Errorf("DateTimeOriginal: %w", err)
+		klog.V(1).Infof("unable to get date time for %s: %v", path, err)
+		return i, nil
 	}
 
 	i.Taken, err = time.Parse(exifDate, ds)
