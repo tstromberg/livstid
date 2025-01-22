@@ -14,6 +14,7 @@ import (
 
 var favKeyword = "fav"
 var maxAlbum = 24
+var minTagAlbumSize = 3
 var entityChar = regexp.MustCompile(`\%[0-9A-Fa-f]{2,4}`)
 var multipleUnderscores = regexp.MustCompile(`_{2,}`)
 
@@ -123,7 +124,7 @@ func Collect(c *Config) (*Assembly, error) {
 
 	fs := []*Album{}
 	for _, f := range favs {
-		if len(f.Images) > 1 {
+		if len(f.Images) >= minTagAlbumSize {
 			fs = append(fs, f)
 		}
 	}

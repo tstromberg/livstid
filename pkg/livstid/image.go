@@ -13,11 +13,12 @@ type ThumbMeta struct {
 }
 
 type Image struct {
-	InPath  string
-	OutPath string
-	ModTime time.Time
-	RelPath string
-	Hier    []string
+	InPath   string
+	OutPath  string
+	BasePath string
+	ModTime  time.Time
+	RelPath  string
+	Hier     []string
 
 	Resize map[string]ThumbMeta
 	Taken  time.Time

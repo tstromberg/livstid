@@ -122,6 +122,7 @@ func Find(root string) ([]*Image, error) {
 				if err != nil {
 					return err
 				}
+				i.BasePath = urlSafePath(filepath.Base(path))
 
 				i.Hier = strings.Split(i.RelPath, string(filepath.Separator))
 

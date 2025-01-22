@@ -26,10 +26,10 @@ type ThumbOpts struct {
 }
 
 var defaultThumbOpts = map[string]ThumbOpts{
-	"SmallY":  {Y: 480, Quality: 80},
-	"SmallX":  {X: 480, Quality: 80},
-	"MediumX": {X: 640, Quality: 85},
-	"LargeX":  {X: 2048, Quality: 85},
+	"Tiny":   {Y: 180, Quality: 75},
+	"Stream": {X: 640, Quality: 85},
+	"Album":  {Y: 640, Quality: 85},
+	"View":   {X: 2048, Quality: 85},
 }
 
 func thumbnails(i Image, outDir string) (map[string]ThumbMeta, error) {

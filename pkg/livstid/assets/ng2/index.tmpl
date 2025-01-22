@@ -27,7 +27,7 @@
 <div class="flex">
 <div class="attractor">
 {{ $p := .Recents | Random }}
-<a href="{{ RelPath .OutDir $p.OutPath }}"><img src="{{ $p.Resize.SmallX.RelPath }}"></a>
+<a href="{{ ImageURL .OutDir $p.OutPath }}"><img src="{{ $p.Resize.Tiny.RelPath }}"></a>
 </div>
 
 <div class="items">
@@ -45,7 +45,7 @@
 <div class="flex">
 <div class="attractor">
 {{ $p := .Favorites | Random }}
-<a href="{{ RelPath .OutDir $p.OutPath }}"><img src="{{ $p.Resize.SmallX.RelPath }}"></a>
+<a href="{{ ImageURL .OutDir $p.OutPath }}"><img src="{{ $p.Resize.Tiny.RelPath }}"></a>
 </div>
 
 <div class="items">
@@ -77,7 +77,7 @@
             <div class="flex">
             <div class="attractor">
             {{ $p := (RandInHier $.Albums $top) }}
-            <a href="{{ RelPath $.OutDir $p.OutPath }}"><img src="{{ $p.Resize.SmallX.RelPath }}"></a>
+            <a href="{{ ImageURL $.OutDir $p.OutPath }}"><img src="{{ $p.Resize.Tiny.RelPath }}"></a>
             </div>
 
             <div class="items">

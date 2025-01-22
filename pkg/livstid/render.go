@@ -183,6 +183,13 @@ func tmplFunctions() template.FuncMap {
 			}
 			return r
 		},
+		"ImageURL": func(b string, s string) string {
+			r, err := filepath.Rel(b, s)
+			if err != nil {
+				return fmt.Sprintf("ERROR[%v]", err)
+			}
+			return filepath.Dir(r) + "/#nanogallery/i/0/" + filepath.Base(r)
+		},
 		"Random": func(as []*Album) *Image {
 			if len(as) == 0 {
 				return &Image{}

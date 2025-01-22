@@ -19,7 +19,7 @@
         <div class="spacer-col"></div>
         <div class="date-col">&#9036;&nbsp;&nbsp;{{ $p.Taken.Format "2006-01-02" }}</div>
         <div class="hole-left-col"></div>
-        <div class="neg-col"><a href="{{ RelPath $.Album.OutPath $p.OutPath }}"><img src="{{ $p.Resize.MediumX.RelPath }}"></a></div>
+        <div class="neg-col"><a href="{{ ImageURL $.Album.OutPath $p.OutPath }}"><img src="{{ $p.Resize.Stream.RelPath }}"></a></div>
         <div class="hole-right-col"></div>
         <div class="unused-col"></div>
 

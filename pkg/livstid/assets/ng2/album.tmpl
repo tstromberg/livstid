@@ -21,7 +21,7 @@
               </h1>
 
               <!-- ### start of the gallery definition ### -->
-              <div id="nanogallery2"
+              <div id="i"
                   data-nanogallery2 = '{
                         "thumbnailWidth": "auto",
                         "thumbnailHeight":  350,
@@ -45,7 +45,7 @@
                                "topRight":  "playPauseButton, zoomButton, fullscreenButton, shareButton, downloadButton, closeButton" }
                       }' >
                 {{ range $i, $p := .Album.Images }}
-                   <a href="{{ RelPath $.Album.OutPath $p.Resize.LargeX.Path }}" data-ngThumb="{{  RelPath $.Album.OutPath $p.Resize.SmallY.Path }}" data-ngdownloadurl="{{ RelPath $.Album.OutPath $p.OutPath }}">
+                   <a href="{{ RelPath $.Album.OutPath $p.Resize.View.Path }}" data-ngid="{{ $p.BasePath }}" data-ngThumb="{{  RelPath $.Album.OutPath $p.Resize.Album.Path }}" data-ngdownloadurl="{{ RelPath $.Album.OutPath $p.OutPath }}">
                        {{ if $p.Title }}{{ $p.Title }}{{ else }}Untitled{{ end }}
                    </a>
                 {{ end }}

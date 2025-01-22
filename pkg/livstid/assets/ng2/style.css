@@ -12,7 +12,7 @@ body {
 }
 
 section img {
-    width: 240px;
+    width: 180px;
     border: 2px solid #000;
     margin-left: 0.5em;
     filter: drop-shadow(4px 4px 4px rgba(0, 0, 0, 0.3));
