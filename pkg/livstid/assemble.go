@@ -96,10 +96,10 @@ func Collect(c *Config) (*Assembly, error) {
 			if favs[k] == nil {
 				favs[k] = &Album{
 					InPath:  rd,
-					OutPath: filepath.Join(outDir, "tags", k),
+					OutPath: filepath.Join(outDir, "favorites", k),
 					Images:  []*Image{},
 					Title:   k,
-					Hier:    []string{"tags", k},
+					Hier:    []string{"favorites", k},
 				}
 			}
 			favs[k].Images = append(favs[k].Images, i)
