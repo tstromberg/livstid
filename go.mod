@@ -12,6 +12,7 @@ require (
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/fsnotify/fsnotify v1.8.0 // indirect
 	github.com/go-logr/logr v1.4.1 // indirect
 	github.com/otiai10/mint v1.6.3 // indirect
 	golang.org/x/image v0.18.0 // indirect

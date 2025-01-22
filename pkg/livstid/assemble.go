@@ -67,7 +67,7 @@ func Collect(c *Config) (*Assembly, error) {
 		}
 
 		safeRelPath := urlSafePath(i.RelPath)
-		rd := filepath.Dir(safeRelPath)
+		rd := filepath.Dir(i.RelPath)
 		i.OutPath = filepath.Join(outDir, safeRelPath)
 
 		if albums[rd] == nil {
