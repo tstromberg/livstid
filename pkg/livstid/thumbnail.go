@@ -33,7 +33,7 @@ var defaultThumbOpts = map[string]ThumbOpts{
 }
 
 func thumbnails(i Image, outDir string) (map[string]ThumbMeta, error) {
-	klog.Infof("creating thumbnails for %s in %s", i.InPath, outDir)
+	klog.V(1).Infof("creating thumbnails for %s in %s", i.InPath, outDir)
 	fullDest := filepath.Join(outDir, urlSafePath(i.RelPath))
 	klog.V(1).Infof("relpath: %s -- full dest: %s", i.RelPath, fullDest)
 

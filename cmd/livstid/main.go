@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"slices"
 	"sync"
+	"time"
 
 	_ "image/jpeg"
 	_ "image/png"
@@ -86,7 +87,6 @@ func build(c *livstid.Config) (*livstid.Assembly, error) {
 		return a, fmt.Errorf("render: %w", err)
 	}
 
-	klog.Infof("rclone target: %s", c.RCloneTarget)
 	if c.RCloneTarget != "" {
 		if err := rcloneSync(c); err != nil {
 			return a, fmt.Errorf("clone: %w", err)
@@ -98,17 +98,18 @@ func build(c *livstid.Config) (*livstid.Assembly, error) {
 
 // rcloneSync synchronizes the website to a remote crlone target
 func rcloneSync(c *livstid.Config) error {
-	klog.Infof("syncing to %s ...", c.RCloneTarget)
+	klog.Infof("rclone syncing to %s ...", c.RCloneTarget)
 	path, err := exec.LookPath("rclone")
 	if err != nil {
 		return fmt.Errorf("rclone not installed in $PATH")
 	}
 
+	start := time.Now()
 	cmd := exec.Command(path, "sync", filepath.Join(c.OutDir, "/"), filepath.Join(c.RCloneTarget, "/"))
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("%v failed: %w", cmd, err)
 	}
-	klog.Infof("rclone sync completed")
+	klog.Infof("rclone sync to %s completed in %s", c.RCloneTarget, time.Since(start))
 	return nil
 }
 
@@ -141,6 +142,7 @@ func watch(c *livstid.Config, a *livstid.Assembly) error {
 					return
 				}
 
+				// TODO: dedup events in quick succession
 				if event.Has(fsnotify.Write) || event.Has(fsnotify.Create) || event.Has(fsnotify.Rename) || event.Has(fsnotify.Remove) {
 					klog.Infof("watch event: %s", event)
 					a, err := build(c)
@@ -197,7 +199,6 @@ func updateWatchPaths(c *livstid.Config, w *fsnotify.Watcher, a *livstid.Assembl
 		}
 	}
 
-	klog.Infof("now watching %d dirs ...", len(w.WatchList()))
 	return nil
 
 }

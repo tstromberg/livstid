@@ -42,7 +42,7 @@ func urlSafePath(in string) string {
 	}
 
 	out := strings.Join(o, "/")
-	klog.Infof("%s -> %s", in, out)
+	klog.V(1).Infof("%s -> %s", in, out)
 	return out
 }
 
@@ -51,7 +51,7 @@ func Collect(c *Config) (*Assembly, error) {
 	inDir := c.InDir
 	outDir := c.OutDir
 
-	klog.Infof("build: %s -> %s", inDir, outDir)
+	klog.V(1).Infof("collect: %s -> %s", inDir, outDir)
 
 	is, err := Find(inDir)
 	if err != nil {
@@ -61,7 +61,7 @@ func Collect(c *Config) (*Assembly, error) {
 	albums := map[string]*Album{}
 	favs := map[string]*Album{}
 	for _, i := range is {
-		klog.Infof("build image: %+v", i)
+		klog.V(1).Infof("build image: %+v", i)
 		i.Resize, err = thumbnails(*i, outDir)
 		if err != nil {
 			return nil, fmt.Errorf("thumbnails: %w", err)
@@ -113,7 +113,7 @@ func Collect(c *Config) (*Assembly, error) {
 		})
 		a.Images = is
 		for i, p := range a.Images {
-			klog.Infof("%s: %d = %s [%s] (taken=%s)", a.Title, i, p.InPath, p.Title, p.Taken)
+			klog.V(1).Infof("%s: %d = %s [%s] (taken=%s)", a.Title, i, p.InPath, p.Title, p.Taken)
 		}
 		as = append(as, a)
 	}

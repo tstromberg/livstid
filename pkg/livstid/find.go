@@ -110,7 +110,7 @@ func Find(root string) ([]*Image, error) {
 			}
 
 			if strings.HasSuffix(path, "jpg") {
-				klog.Infof("found %s", path)
+				klog.V(1).Infof("found %s", path)
 				i, err := read(path, et)
 				if err != nil {
 					klog.Errorf("read failure: %v", err)

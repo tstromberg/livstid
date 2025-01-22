@@ -53,7 +53,7 @@ func copyAssets(inDir string, outDir string) error {
 	for _, ext := range []string{"png", "css", "jpg", "gif"} {
 		src := fmt.Sprintf("%s/*.%s", inDir, ext)
 		ms, err := filepath.Glob(src)
-		klog.Infof("copying %d assets from %s", len(ms), src)
+		klog.V(1).Infof("copying %d assets from %s", len(ms), src)
 		if err != nil {
 			return err
 		}
@@ -67,7 +67,7 @@ func copyAssets(inDir string, outDir string) error {
 }
 
 func writeRecent(c *Config, a *Album) error {
-	klog.Infof("writing recent with %d images ...", len(a.Images))
+	klog.V(1).Infof("writing recent with %d images ...", len(a.Images))
 
 	bs, err := renderAlbum(c, a, streamTmpl)
 	if err != nil {
@@ -75,25 +75,26 @@ func writeRecent(c *Config, a *Album) error {
 	}
 
 	path := filepath.Join(c.OutDir, "recent.html")
-	klog.Infof("Writing stream index to %s", path)
+	klog.V(1).Infof("Writing stream index to %s", path)
 	return os.WriteFile(path, bs, 0o644)
 }
 
 func writeIndex(c *Config, a *Assembly) error {
-	klog.Infof("writing album index with %d albums ...", len(a.Albums))
+	klog.V(1).Infof("writing album index with %d albums ...", len(a.Albums))
 	bs, err := renderAlbumIndex(c, a, idxTmpl)
 	if err != nil {
 		return fmt.Errorf("render albums: %w", err)
 	}
 
 	p := filepath.Join(c.OutDir, "index.html")
-	klog.Infof("Writing album index to %s", p)
+	klog.V(1).Infof("Writing album index to %s", p)
 	return os.WriteFile(p, bs, 0o644)
 }
 
 func writeAlbums(c *Config, as []*Album) error {
+	klog.Infof("Writing out %d albums ...", len(as))
 	for _, a := range as {
-		klog.Infof("rendering album %s [%s] with %d images ...", a.Title, a.OutPath, len(a.Images))
+		klog.V(1).Infof("rendering album %s [%s] with %d images ...", a.Title, a.OutPath, len(a.Images))
 		bs, err := renderAlbum(c, a, albumTmpl)
 		if err != nil {
 			return fmt.Errorf("render album: %w", err)
@@ -104,7 +105,7 @@ func writeAlbums(c *Config, as []*Album) error {
 		}
 
 		p := filepath.Join(filepath.Join(a.OutPath, "index.html"))
-		klog.Infof("Writing album index to %s", p)
+		klog.V(1).Infof("Writing album index to %s", p)
 
 		if err := os.WriteFile(p, bs, 0o644); err != nil {
 			return fmt.Errorf("write file: %w", err)
