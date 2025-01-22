@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os/exec"
 	"path/filepath"
 	"slices"
 	"sync"
@@ -26,13 +27,8 @@ var (
 	listen      = flag.Bool("listen", false, "serve content via HTTP")
 	addr        = flag.String("addr", "localhost:12800", "host:port to bind to in listen mode")
 	watchFlag   = flag.Bool("watch", false, "watch for changes to inDir and rebuild")
+	rcloneFlag  = flag.String("rclone", "", "rclone target to sync directory contents to")
 )
-
-/*
-var commit = flag.Bool("commit", false, "Commit changes")
-var push = flag.Bool("push", false, "Push changes")
-var watch = flag.Bool("watch", false, "Watch for changes")
-*/
 
 func main() {
 	klog.InitFlags(nil)
@@ -47,19 +43,16 @@ func main() {
 	}
 
 	c := &livstid.Config{
-		InDir:       *inDir,
-		OutDir:      *outDir,
-		Collection:  *title,
-		Description: *description,
+		InDir:        *inDir,
+		OutDir:       *outDir,
+		Collection:   *title,
+		Description:  *description,
+		RCloneTarget: *rcloneFlag,
 	}
 
-	a, err := livstid.Collect(c)
+	a, err := build(c)
 	if err != nil {
 		klog.Exitf("build failed: %v", err)
-	}
-
-	if err := livstid.Render(c, a); err != nil {
-		klog.Exitf("render failed: %v", err)
 	}
 
 	var wg sync.WaitGroup
@@ -80,6 +73,43 @@ func main() {
 	}
 
 	wg.Wait()
+}
+
+// build collects, renders, and syncs
+func build(c *livstid.Config) (*livstid.Assembly, error) {
+	a, err := livstid.Collect(c)
+	if err != nil {
+		return a, fmt.Errorf("collect: %w", err)
+	}
+
+	if err := livstid.Render(c, a); err != nil {
+		return a, fmt.Errorf("render: %w", err)
+	}
+
+	klog.Infof("rclone target: %s", c.RCloneTarget)
+	if c.RCloneTarget != "" {
+		if err := rcloneSync(c); err != nil {
+			return a, fmt.Errorf("clone: %w", err)
+		}
+	}
+
+	return a, nil
+}
+
+// rcloneSync synchronizes the website to a remote crlone target
+func rcloneSync(c *livstid.Config) error {
+	klog.Infof("syncing to %s ...", c.RCloneTarget)
+	path, err := exec.LookPath("rclone")
+	if err != nil {
+		return fmt.Errorf("rclone not installed in $PATH")
+	}
+
+	cmd := exec.Command(path, "sync", filepath.Join(c.OutDir, "/"), filepath.Join(c.RCloneTarget, "/"))
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("%v failed: %w", cmd, err)
+	}
+	klog.Infof("rclone sync completed")
+	return nil
 }
 
 // serve serves a static web directory via HTTP
@@ -110,16 +140,18 @@ func watch(c *livstid.Config, a *livstid.Assembly) error {
 				if !ok {
 					return
 				}
-				log.Println("event:", event)
+
 				if event.Has(fsnotify.Write) || event.Has(fsnotify.Create) || event.Has(fsnotify.Rename) || event.Has(fsnotify.Remove) {
-					a, err := livstid.Collect(c)
+					klog.Infof("watch event: %s", event)
+					a, err := build(c)
 					if err != nil {
 						klog.Exitf("build failed: %v", err)
 					}
 
-					if err := livstid.Render(c, a); err != nil {
-						klog.Exitf("render failed: %v", err)
+					if err := updateWatchPaths(c, w, a); err != nil {
+						klog.Exitf("watch update failed: %v", err)
 					}
+
 				}
 			case err, ok := <-w.Errors:
 				if !ok {
@@ -130,11 +162,24 @@ func watch(c *livstid.Config, a *livstid.Assembly) error {
 		}
 	}()
 
-	dirs := []string{
-		c.InDir,
+	if err := updateWatchPaths(c, w, a); err != nil {
+		return err
 	}
+
+	<-make(chan struct{})
+	return nil
+}
+
+// updateWatchPaths updates the watch list with new paths
+func updateWatchPaths(c *livstid.Config, w *fsnotify.Watcher, a *livstid.Assembly) error {
+	exists := map[string]bool{}
+	for _, d := range w.WatchList() {
+		exists[d] = true
+	}
+
+	dirs := []string{c.InDir}
+
 	for _, aa := range a.Albums {
-		klog.Infof("%s", aa.InPath)
 		dirs = append(dirs, filepath.Join(c.InDir, aa.InPath))
 		dirs = append(dirs, filepath.Dir(filepath.Join(c.InDir, aa.InPath)))
 	}
@@ -142,14 +187,17 @@ func watch(c *livstid.Config, a *livstid.Assembly) error {
 	slices.Sort(dirs)
 	dirs = slices.Compact(dirs)
 
-	klog.Infof("watching %d dirs ...", len(dirs))
 	for _, d := range dirs {
-		err = w.Add(d)
-		if err != nil {
-			log.Fatal(err)
+		if exists[d] {
+			continue
+		}
+
+		if err := w.Add(d); err != nil {
+			return err
 		}
 	}
 
-	<-make(chan struct{})
+	klog.Infof("now watching %d dirs ...", len(w.WatchList()))
 	return nil
+
 }
