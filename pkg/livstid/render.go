@@ -23,6 +23,9 @@ var idxTmpl string
 //go:embed assets/ng2/album.tmpl
 var albumTmpl string
 
+//go:embed assets/ng2/style.css
+var styleText string
+
 var assetsDir = "pkg/livstid/assets/ng2"
 
 func Render(c *Config, a *Assembly) error {
@@ -125,10 +128,12 @@ func renderAlbum(c *Config, a *Album, templateString string) ([]byte, error) {
 		Title      string
 		Collection string
 		Album      *Album
+		Style      template.CSS
 	}{
 		Collection: c.Collection,
 		Title:      a.Title,
 		Album:      a,
+		Style:      template.CSS(styleText),
 	}
 
 	var tpl bytes.Buffer
@@ -153,6 +158,7 @@ func renderAlbumIndex(c *Config, a *Assembly, ts string) ([]byte, error) {
 		Albums      []*Album
 		Favorites   []*Album
 		Recent      *Album
+		Style       template.CSS
 	}{
 		Collection:  c.Collection,
 		Description: c.Description,
@@ -160,6 +166,7 @@ func renderAlbumIndex(c *Config, a *Assembly, ts string) ([]byte, error) {
 		Albums:      a.Albums,
 		Favorites:   a.Favorites,
 		Recent:      a.Recent,
+		Style:       template.CSS(styleText),
 	}
 
 	var tpl bytes.Buffer
