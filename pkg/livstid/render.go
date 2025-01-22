@@ -5,10 +5,10 @@ import (
 	_ "embed"
 	"fmt"
 	"html/template"
+	"math/rand"
 	"os"
 	"path/filepath"
-
-	"math/rand"
+	"strings"
 
 	"github.com/otiai10/copy"
 	"k8s.io/klog/v2"
@@ -183,6 +183,13 @@ func tmplFunctions() template.FuncMap {
 				return fmt.Sprintf("ERROR[%v]", err)
 			}
 			return r
+		},
+		"ToRoot": func(hier []string) string {
+			relPath := []string{}
+			for range hier {
+				relPath = append(relPath, "..")
+			}
+			return strings.Join(relPath, "/")
 		},
 		"ImageURL": func(b string, s string) string {
 			r, err := filepath.Rel(b, s)

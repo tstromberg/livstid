@@ -12,11 +12,13 @@ import (
 	"k8s.io/klog/v2"
 )
 
-var favKeyword = "fav"
-var maxAlbum = 24
-var minTagAlbumSize = 3
-var entityChar = regexp.MustCompile(`\%[0-9A-Fa-f]{2,4}`)
-var multipleUnderscores = regexp.MustCompile(`_{2,}`)
+var (
+	favKeyword          = "fav"
+	maxAlbum            = 24
+	minTagAlbumSize     = 3
+	entityChar          = regexp.MustCompile(`\%[0-9A-Fa-f]{2,4}`)
+	multipleUnderscores = regexp.MustCompile(`_{2,}`)
+)
 
 // an Assembly is an assembled collection of images.
 type Assembly struct {

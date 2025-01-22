@@ -200,5 +200,4 @@ func updateWatchPaths(c *livstid.Config, w *fsnotify.Watcher, a *livstid.Assembl
 	}
 
 	return nil
-
 }
