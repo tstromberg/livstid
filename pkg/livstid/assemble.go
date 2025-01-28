@@ -15,6 +15,8 @@ import (
 var (
 	favKeyword          = "fav"
 	maxAlbum            = 24
+	maxHierAlbum        = 48
+	maxTopHierAlbum     = 365
 	minTagAlbumSize     = 3
 	entityChar          = regexp.MustCompile(`\%[0-9A-Fa-f]{2,4}`)
 	multipleUnderscores = regexp.MustCompile(`_{2,}`)
@@ -22,10 +24,11 @@ var (
 
 // an Assembly is an assembled collection of images.
 type Assembly struct {
-	Images    []*Image
-	Albums    []*Album
-	Favorites []*Album
-	Recent    *Album
+	Images     []*Image
+	Albums     []*Album
+	HierAlbums []*Album
+	Favorites  []*Album
+	Recent     *Album
 }
 
 func urlSafePath(in string) string {
@@ -61,6 +64,7 @@ func Collect(c *Config) (*Assembly, error) {
 	}
 
 	albums := map[string]*Album{}
+	hierAlbums := map[string]*Album{}
 	favs := map[string]*Album{}
 	for _, i := range is {
 		klog.V(1).Infof("build image: %+v", i)
@@ -72,6 +76,11 @@ func Collect(c *Config) (*Assembly, error) {
 		safeRelPath := urlSafePath(i.RelPath)
 		rd := filepath.Dir(i.RelPath)
 		i.OutPath = filepath.Join(outDir, safeRelPath)
+		hier := strings.Split(rd, string(filepath.Separator))
+		if filepath.Base(rd) == "EmptyName" {
+			klog.Infof("skipping EmptyName ...")
+			continue
+		}
 
 		if albums[rd] == nil {
 			albums[rd] = &Album{
@@ -79,10 +88,29 @@ func Collect(c *Config) (*Assembly, error) {
 				OutPath: filepath.Join(outDir, urlSafePath(rd)),
 				Images:  []*Image{},
 				Title:   filepath.Base(rd),
-				Hier:    strings.Split(rd, string(filepath.Separator)),
+				Hier:    hier,
 			}
 		}
 		albums[rd].Images = append(albums[rd].Images, i)
+
+		// virtual albums based on hierarchy
+		for level := range hier {
+			if level == 0 || level == len(hier) {
+				continue
+			}
+			valbum := strings.Join(hier[0:level], "/")
+			if hierAlbums[valbum] == nil {
+				hierAlbums[valbum] = &Album{
+					InPath:    filepath.Join(c.InDir, valbum),
+					OutPath:   filepath.Join(outDir, valbum),
+					Images:    []*Image{},
+					Title:     valbum,
+					Hier:      strings.Split(valbum, string(filepath.Separator)),
+					HierLevel: level,
+				}
+			}
+			hierAlbums[valbum].Images = append(hierAlbums[valbum].Images, i)
+		}
 
 		if !slices.Contains(i.Keywords, favKeyword) {
 			continue
@@ -131,6 +159,11 @@ func Collect(c *Config) (*Assembly, error) {
 		}
 	}
 
+	hs := []*Album{}
+	for _, f := range hierAlbums {
+		hs = append(fs, f)
+	}
+
 	recent := &Album{Title: "Recent", Images: is, OutPath: outDir}
 
 	ri := recent.Images
@@ -145,9 +178,34 @@ func Collect(c *Config) (*Assembly, error) {
 	recent.Images = ri
 
 	return &Assembly{
-		Images:    is,
-		Albums:    as,
-		Favorites: fs,
-		Recent:    recent,
+		Images:     is,
+		Albums:     as,
+		Favorites:  fs,
+		Recent:     recent,
+		HierAlbums: hs,
 	}, nil
+}
+
+// Validate checks the assembly for potential issues with image and album counts
+func (a *Assembly) Validate() []error {
+	var errors []error
+
+	// Check album photo count
+	for _, album := range a.Albums {
+		klog.Infof("%s has %d photos [level=%d]", album.Title, len(album.Images), album.HierLevel)
+
+		max := maxAlbum
+		if album.HierLevel == 1 {
+			max = maxTopHierAlbum
+		}
+
+		if album.HierLevel > 1 {
+			max = maxHierAlbum
+		}
+		if len(album.Images) > max {
+			errors = append(errors, fmt.Errorf("Album '%s' contains %d images, which exceeds the %d image limit at hierarchy level %d", album.Title, len(album.Images), max, album.HierLevel))
+		}
+	}
+
+	return errors
 }

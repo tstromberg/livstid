@@ -18,7 +18,7 @@
 
               <h1><a href="{{ .Album.Hier | ToRoot }}">{{.Collection}}</a>
               {{ range $i, $p := .Album.Hier }}
-              &gt {{ $p }}
+              &gt <a href="{{ Upward $.Album.Hier $i }}"> {{ $p }}</a>
               {{ end }}
 
               </h1>
@@ -48,9 +48,13 @@
                                "topRight":  "playPauseButton, zoomButton, fullscreenButton, shareButton, downloadButton, closeButton" }
                       }' >
                 {{ range $i, $p := .Album.Images }}
-                   <a href="{{ RelPath $.Album.OutPath $p.Resize.View.Path }}" data-ngid="{{ $p.BasePath }}" data-ngThumb="{{  RelPath $.Album.OutPath $p.Resize.Album.Path }}" data-ngdownloadurl="{{ RelPath $.Album.OutPath $p.OutPath }}">
+                   <a href="{{ RelPath $.Album.OutPath $p.Resize.View.Path }}"
+                        data-ngid="{{ $p.BasePath }}"
+                        data-ngThumb="{{  RelPath $.Album.OutPath $p.Resize.Album.Path }}"
+                        data-ngdownloadurl="{{ RelPath $.Album.OutPath $p.OutPath }}">
+                        {{ if $p.Highlight }}class="highlight" {{ end }}
                        {{ if $p.Title }}{{ $p.Title }}{{ else }}Untitled{{ end }}
-                   </a>
+b                   </a>
                 {{ end }}
                </div>
               <!-- ### end of the gallery definition ### -->

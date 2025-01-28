@@ -30,7 +30,7 @@
 <div class="flex">
 <div class="attractor">
 {{ $p := .Recent | First }}
-<a href="{{ ImageURL .OutDir $p.OutPath }}"><img src="{{ $p.Resize.Tiny.RelPath }}"></a>
+<a href="recent.html"><img src="{{ $p.Resize.Tiny.RelPath }}" srcset="{{ $p.Resize.Tiny2X.RelPath }} 2x"></a>
 </div>
 
 <div class="items">
@@ -62,11 +62,14 @@
 </section>
 
 <h2>albums</h2>
-    {{ $last := "" }}
+    {{ $lastTop := "" }}
+    {{ $lastNext := "" }}
     {{ range $i, $a := .Albums }}
         {{ $top := (index $a.Hier 0) }}
-        {{ if ne $top $last }}
-            {{ if ne $last "" }}
+        {{ $next := (index $a.Hier 1) }}
+
+        {{ if ne $top $lastTop }}
+            {{ if ne $lastTop "" }}
                 </ul>
                 </div>
                 </div>
@@ -74,25 +77,28 @@
             {{ end }}
             <section>
             <h3 class="hier">
-                {{ $top }}
+                <a href="{{ $top }}/">{{ $top }}</a>
             </h3>
 
             <div class="flex">
             <div class="attractor">
             {{ $p := (RandInHier $.Albums $top) }}
+
+
             <a href="{{ ImageURL $.OutDir $p.OutPath }}"><img src="{{ $p.Resize.Tiny.RelPath }}"></a>
             </div>
 
             <div class="items">
             <ul>
         {{ end }}
-        <li><a href="{{ RelPath $.OutDir $a.OutPath }}">
+        <li><a href="{{ $top }}/{{ $next }}/">{{ $next }}</a> &mdash; <a href="{{ RelPath $.OutDir $a.OutPath }}">
         {{ if eq $top $a.Title }}
             No album
         {{ else }}
             {{ $a.Title }}
         {{ end }}</a></li>
-        {{ $last = $top }}
+        {{ $lastTop = $top }}
+        {{ $lastNext = $next }}
     {{ end }}
 </ul>
 </div>

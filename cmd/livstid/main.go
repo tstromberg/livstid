@@ -83,6 +83,14 @@ func build(c *livstid.Config) (*livstid.Assembly, error) {
 		return a, fmt.Errorf("collect: %w", err)
 	}
 
+	errs := a.Validate()
+	if len(errs) > 0 {
+		for _, err := range errs {
+			klog.Errorf("validation error: %v", err)
+		}
+		return a, err
+	}
+
 	if err := livstid.Render(c, a); err != nil {
 		return a, fmt.Errorf("render: %w", err)
 	}
@@ -150,7 +158,7 @@ func watch(c *livstid.Config, a *livstid.Assembly) error {
 						klog.Exitf("build failed: %v", err)
 					}
 
-					if err := updateWatchPaths(c, w, a); err != nil {
+					if err := updateWatchPaths(c, w, a, event.Name); err != nil {
 						klog.Exitf("watch update failed: %v", err)
 					}
 
@@ -164,7 +172,7 @@ func watch(c *livstid.Config, a *livstid.Assembly) error {
 		}
 	}()
 
-	if err := updateWatchPaths(c, w, a); err != nil {
+	if err := updateWatchPaths(c, w, a, ""); err != nil {
 		return err
 	}
 
@@ -173,13 +181,16 @@ func watch(c *livstid.Config, a *livstid.Assembly) error {
 }
 
 // updateWatchPaths updates the watch list with new paths
-func updateWatchPaths(c *livstid.Config, w *fsnotify.Watcher, a *livstid.Assembly) error {
+func updateWatchPaths(c *livstid.Config, w *fsnotify.Watcher, a *livstid.Assembly, path string) error {
 	exists := map[string]bool{}
 	for _, d := range w.WatchList() {
 		exists[d] = true
 	}
 
 	dirs := []string{c.InDir}
+	if path != "" {
+		dirs = append(dirs, path)
+	}
 
 	for _, aa := range a.Albums {
 		dirs = append(dirs, filepath.Join(c.InDir, aa.InPath))

@@ -38,6 +38,8 @@ type Image struct {
 	ISO         int64
 	Speed       string
 
+	Highlight bool
+
 	Width  int64
 	Height int64
 }
@@ -46,10 +48,11 @@ type Album struct {
 	StartTime time.Time
 	EndTime   time.Time
 
-	InPath  string
-	OutPath string
-	ModTime time.Time
-	Hier    []string
+	InPath    string
+	OutPath   string
+	ModTime   time.Time
+	Hier      []string
+	HierLevel int
 
 	Title       string
 	Description string

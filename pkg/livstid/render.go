@@ -41,6 +41,10 @@ func Render(c *Config, a *Assembly) error {
 		return fmt.Errorf("write favorites: %w", err)
 	}
 
+	if err := writeAlbums(c, a.HierAlbums); err != nil {
+		return fmt.Errorf("write hier albums: %w", err)
+	}
+
 	if err := writeRecent(c, a.Recent); err != nil {
 		return fmt.Errorf("write stream: %w", err)
 	}
@@ -190,6 +194,19 @@ func tmplFunctions() template.FuncMap {
 				return fmt.Sprintf("ERROR[%v]", err)
 			}
 			return r
+		},
+		"Upward": func(hier []string, num int) string {
+			if len(hier)-1 == num {
+				return ""
+			}
+			parts := len(hier) - num - 1
+			relPath := []string{}
+			for i := 0; i < parts; i++ {
+				relPath = append(relPath, "..")
+			}
+
+			klog.Infof("upward %s [len=%d] num=%d parts=%d - returning %v", hier, len(hier), num, parts, relPath)
+			return strings.Join(relPath, "/")
 		},
 		"ToRoot": func(hier []string) string {
 			relPath := []string{}

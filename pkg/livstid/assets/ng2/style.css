@@ -118,7 +118,7 @@ a {
     filter: drop-shadow(4px 4px 4px #111);
 }
 
-@media (orientation: portrait) {
+@media (orientation: portrait) and (max-width: 1024px) {
     .flex {
         display: grid;
     }
