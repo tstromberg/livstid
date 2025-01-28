@@ -9,10 +9,11 @@ body {
 .flex {
     display: flex;
     flex-wrap: nowrap;
+    margin: 1.5em;
 }
 
 section img {
-    width: 180px;
+    width: 140px;
     border: 2px solid #000;
     margin-left: 0.5em;
     filter: drop-shadow(4px 4px 4px rgba(0, 0, 0, 0.3));
@@ -30,6 +31,7 @@ p {
 h3.hier {
     color: #999;
     margin-bottom: 0.5em;
+    font-size: 125%;
 }
 
 .entry {

@@ -30,7 +30,7 @@
 <div class="flex">
 <div class="attractor">
 {{ $p := .Recent | First }}
-<a href="recent.html"><img src="{{ $p.Resize.Tiny.RelPath }}" srcset="{{ $p.Resize.Tiny2X.RelPath }} 2x"></a>
+<a href="recent.html"><img src="{{ $p.Resize.Tiny.RelPath }}" srcset="{{ $p.Resize.Album.RelPath }} 2x"></a>
 </div>
 
 <div class="items">
@@ -48,7 +48,7 @@
 <div class="flex">
 <div class="attractor">
 {{ $p := .Favorites | Random }}
-<a href="{{ ImageURL .OutDir $p.OutPath }}"><img src="{{ $p.Resize.Tiny.RelPath }}"></a>
+<a href="{{ ImageURL .OutDir $p.OutPath }}"><img src="{{ $p.Resize.Tiny.RelPath }}" srcset="{{ $p.Resize.Album.RelPath }} 2x"></a>
 </div>
 
 <div class="items">
@@ -85,7 +85,7 @@
             {{ $p := (RandInHier $.Albums $top) }}
 
 
-            <a href="{{ ImageURL $.OutDir $p.OutPath }}"><img src="{{ $p.Resize.Tiny.RelPath }}"></a>
+            <a href="{{ ImageURL $.OutDir $p.OutPath }}"><img src="{{ $p.Resize.Tiny.RelPath }}" srcset="{{ $p.Resize.Album.RelPath }} 2x"></a>
             </div>
 
             <div class="items">
