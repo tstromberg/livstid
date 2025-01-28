@@ -17,7 +17,7 @@ var (
 	maxAlbum            = 24
 	maxHierAlbum        = 48
 	maxTopHierAlbum     = 365
-	minTagAlbumSize     = 3
+	minAlbumSize        = 4
 	entityChar          = regexp.MustCompile(`\%[0-9A-Fa-f]{2,4}`)
 	multipleUnderscores = regexp.MustCompile(`_{2,}`)
 )
@@ -138,6 +138,9 @@ func Collect(c *Config) (*Assembly, error) {
 	as := []*Album{}
 	for _, a := range albums {
 		is := a.Images
+		if len(is) < minAlbumSize {
+			continue
+		}
 		sort.Slice(is, func(i, j int) bool {
 			return is[i].Taken.Before(is[j].Taken)
 		})
@@ -154,7 +157,7 @@ func Collect(c *Config) (*Assembly, error) {
 
 	fs := []*Album{}
 	for _, f := range favs {
-		if len(f.Images) >= minTagAlbumSize {
+		if len(f.Images) >= minAlbumSize {
 			fs = append(fs, f)
 		}
 	}
