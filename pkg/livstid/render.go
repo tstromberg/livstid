@@ -82,7 +82,7 @@ func writeRecent(c *Config, a *Album) error {
 		return fmt.Errorf("render stream: %w", err)
 	}
 
-	path := filepath.Join(c.OutDir, "recent/index.hml")
+	path := filepath.Join(c.OutDir, "recent/all/index.html")
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 		return fmt.Errorf("mkdir: %w", err)
 	}

@@ -159,7 +159,7 @@ a {
 
 @media (max-width: 1024px) {
     body {
-        font-size: 95%;
+        font-size: 85%;
     }
     div.index_albums {
         margin-left: 1em;
@@ -188,5 +188,43 @@ a {
         margin: 0;
         padding: 0;
         padding-bottom: 0.1em;
+    }
+    .neg-col {
+        min-width: 60%;
+        max-width: 60%;
+        background: #131313;
+        margin: 0;
+        padding: 0;
+    }
+    .neg-col {
+        margin: 0;
+        padding: 0;
+    }
+    .neg-col img {
+        border: 2px solid #000;
+    }
+
+    .spacer-col {
+        display: none;
+    }
+    .unused-col {
+        display: none;
+    }
+    .date-col {
+        display: none;
+    }
+    .exif {
+        display: none;
+    }
+    h3.title {
+        margin: 0;
+        padding: 0;
+    }
+    .meta-col {
+        padding: 0;
+        padding-left: 1.5em;
+    }
+    .entry {
+        padding-bottom: 1em;
     }
 }

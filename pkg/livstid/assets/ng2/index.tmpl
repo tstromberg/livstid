@@ -26,11 +26,11 @@
 <section class="index recent">
     <div class="attractor">
         {{ $p := .Recent | First }}
-        <a href="recent/"><img src="{{ $p.Resize.Tiny.RelPath }}" srcset="{{ $p.Resize.Album.RelPath }} 2x"></a>
+        <a href="recent/all"><img src="{{ $p.Resize.Tiny.RelPath }}" srcset="{{ $p.Resize.Album.RelPath }} 2x"></a>
     </div>
 
     <div class="index_albums">
-        <h2><a href="recent/">latest additions</a></h2>
+        <h2><a href="recent/all">latest additions</a></h2>
         {{ $updated := .Recent | MostRecentTime }}
         <div class="updated">last updated {{ $updated.Format "2006-01-02" }}</div>
     </div>
