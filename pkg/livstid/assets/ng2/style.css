@@ -6,17 +6,54 @@ body {
     font-family: Lora, serif;
 }
 
-.flex {
+section.index {
+    border-top: 1px solid #000;
+    max-width: 35em;
+    padding: 1.5em;
     display: flex;
     flex-wrap: nowrap;
-    margin: 1.5em;
+}
+
+div.index_albums {
+    margin-left: 2.5em;
+}
+
+div.index_albums ul {
+    list-style-type: "· ";
+    margin: 0;
+    padding-left: 1em;
+}
+
+div.index_albums ul.next {
+    padding-left: 2.5em;
+    padding-bottom: 0.1em;
+    padding-top: 0.1em;
+}
+
+div.index_albums h2 {
+    margin: 0;
+    font-size: 125%;
+    padding: 0;
+    padding-bottom: 0.25em;
+}
+
+div.index_albums h3 {
+    margin: 0;
+    padding: 0;
+    padding-left: 0.4em;
+    margin-left: 0.4em;
+    border-left: 4px dotted #353535;
 }
 
 section img {
     width: 140px;
     border: 2px solid #000;
-    margin-left: 0.5em;
     filter: drop-shadow(4px 4px 4px rgba(0, 0, 0, 0.3));
+}
+
+div.updated {
+    font-style: italic;
+    color: #999;
 }
 
 div.items ul {
@@ -26,12 +63,6 @@ div.items ul {
 p {
     color: #999;
     font-style: italic;
-}
-
-h3.hier {
-    color: #999;
-    margin-bottom: 0.5em;
-    font-size: 125%;
 }
 
 .entry {
@@ -98,8 +129,14 @@ a:link {
     color: #fff;
 }
 
+h2 a:visited {
+    color: #fff;
+    text-decoration-color: #d0bd0a;
+}
+
 a:visited {
-    color: #88735c;
+    color: #aaa;
+    text-decoration-color: #d0bd0a;
 }
 
 a {
@@ -120,11 +157,36 @@ a {
     filter: drop-shadow(4px 4px 4px #111);
 }
 
-@media (orientation: portrait) and (max-width: 1024px) {
-    .flex {
-        display: grid;
+@media (max-width: 1024px) {
+    body {
+        font-size: 95%;
     }
-    ul {
-        padding-left: 1.5em;
+    div.index_albums {
+        margin-left: 1em;
+        width: 100%;
+        display: block;
+    }
+    section.index {
+        padding: 0.5em;
+        padding-top: 1em;
+        padding-bottom: 1em;
+    }
+    div.attractor {
+        display: block;
+        width: 100%;
+        display: none;
+    }
+    div.index_albums ul.next {
+        padding-left: 2em;
+        padding-bottom: 1em;
+    }
+    div.index_albums h3 {
+        padding-left: 0.4em;
+        margin-left: 0.4em;
+    }
+    div.index_albums h2 {
+        margin: 0;
+        padding: 0;
+        padding-bottom: 0.1em;
     }
 }

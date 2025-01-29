@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/otiai10/copy"
 	"k8s.io/klog/v2"
@@ -81,7 +82,11 @@ func writeRecent(c *Config, a *Album) error {
 		return fmt.Errorf("render stream: %w", err)
 	}
 
-	path := filepath.Join(c.OutDir, "recent.html")
+	path := filepath.Join(c.OutDir, "recent/index.hml")
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		return fmt.Errorf("mkdir: %w", err)
+	}
+
 	klog.V(1).Infof("Writing stream index to %s", path)
 	return os.WriteFile(path, bs, 0o644)
 }
@@ -232,9 +237,19 @@ func tmplFunctions() template.FuncMap {
 			}
 			return is[rand.Intn(len(is))]
 		},
+		"MostRecentTime": func(a *Album) time.Time {
+			d := time.Time{}
+			for _, i := range a.Images {
+				if i.Taken.After(d) {
+					d = i.Taken
+				}
+			}
+			return d
+		},
 		"First": func(a *Album) *Image {
 			return a.Images[0]
-		}, "RandInHier": func(as []*Album, top string) *Image {
+		},
+		"RandInHier": func(as []*Album, top string) *Image {
 			is := []*Image{}
 			for _, a := range as {
 				if a.Hier[0] == top {

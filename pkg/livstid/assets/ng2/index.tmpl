@@ -23,45 +23,41 @@
 
 <p class="description">{{.Description}}</p>
 
+<section class="index recent">
+    <div class="attractor">
+        {{ $p := .Recent | First }}
+        <a href="recent/"><img src="{{ $p.Resize.Tiny.RelPath }}" srcset="{{ $p.Resize.Album.RelPath }} 2x"></a>
+    </div>
 
-<section>
-<h2>latest</h2>
-
-<div class="flex">
-<div class="attractor">
-{{ $p := .Recent | First }}
-<a href="recent.html"><img src="{{ $p.Resize.Tiny.RelPath }}" srcset="{{ $p.Resize.Album.RelPath }} 2x"></a>
-</div>
-
-<div class="items">
-<ul>
-<li><a href="recent.html">recent photos</a></li>
-</ul>
-</div>
-</div>
+    <div class="index_albums">
+        <h2><a href="recent/">latest additions</a></h2>
+        {{ $updated := .Recent | MostRecentTime }}
+        <div class="updated">last updated {{ $updated.Format "2006-01-02" }}</div>
+    </div>
 
 </section>
 
-<h2>favorites</h2>
 
-<section>
-<div class="flex">
-<div class="attractor">
-{{ $p := .Favorites | Random }}
-<a href="{{ ImageURL .OutDir $p.OutPath }}"><img src="{{ $p.Resize.Tiny.RelPath }}" srcset="{{ $p.Resize.Album.RelPath }} 2x"></a>
-</div>
+<section class="index favorites">
+    <div class="attractor">
+        {{ $p := .Favorites | Random }}
+        <a href="{{ ImageURL .OutDir $p.OutPath }}"><img src="{{ $p.Resize.Tiny.RelPath }}" srcset="{{ $p.Resize.Album.RelPath }} 2x"></a>
+    </div>
 
-<div class="items">
-<ul>
-    {{ range $i, $a := .Favorites }}
-    <li><a href="{{ RelPath $.OutDir $a.OutPath }}">{{ $a.OutPath | BasePath }}</a></li>
-    {{ end }}
-</ul>
-</div>
-</div>
+    <div class="index_albums">
+        <h2><a href="favorites/all">favorites</a></h2>
+        <ul>
+            {{ range $i, $a := .Favorites }}
+                {{ $name := $a.OutPath | BasePath }}
+                {{ if ne $name "all" }}
+                    <li><a href="{{ RelPath $.OutDir $a.OutPath }}">{{ $name }}</a></li>
+                {{ end }}
+            {{ end }}
+        </ul>
+        </div>
+    </div>
 </section>
 
-<h2>albums</h2>
     {{ $lastTop := "" }}
     {{ $lastNext := "" }}
     {{ range $i, $a := .Albums }}
@@ -74,35 +70,38 @@
                 </div>
                 </div>
                 </section>
+                {{ $lastNext = "" }}
             {{ end }}
-            <section>
-            <h3 class="hier">
-                <a href="{{ $top }}/">{{ $top }}</a>
-            </h3>
+            <section class="index album">
+                <div class="attractor">
+                    {{ $p := (RandInHier $.Albums $top) }}
+                    <a href="{{ ImageURL $.OutDir $p.OutPath }}"><img src="{{ $p.Resize.Tiny.RelPath }}" srcset="{{ $p.Resize.Album.RelPath }} 2x"></a>
+                </div>
 
-            <div class="flex">
-            <div class="attractor">
-            {{ $p := (RandInHier $.Albums $top) }}
-
-
-            <a href="{{ ImageURL $.OutDir $p.OutPath }}"><img src="{{ $p.Resize.Tiny.RelPath }}" srcset="{{ $p.Resize.Album.RelPath }} 2x"></a>
-            </div>
-
-            <div class="items">
-            <ul>
-        {{ end }}
-        <li><a href="{{ $top }}/{{ $next }}/">{{ $next }}</a> &mdash; <a href="{{ RelPath $.OutDir $a.OutPath }}">
-        {{ if eq $top $a.Title }}
-            No album
+                <div class="index_albums">
+                    <h2><a href="{{ $top }}/">{{ $top }}</a></h2>
         {{ else }}
-            {{ $a.Title }}
-        {{ end }}</a></li>
-        {{ $lastTop = $top }}
-        {{ $lastNext = $next }}
+        {{ end }}
+        {{ if ne $next $lastNext }}
+            {{ if ne $lastNext "" }}</ul>{{ end }}
+            <h3><a href="{{ $top }}/{{ $next }}/">{{ $next }}</a></h3>
+            <ul class="next">
+        {{ end }}
+
+                        <!-- for each album -->
+                        <li><a href="{{ RelPath $.OutDir $a.OutPath }}">
+                            {{ if eq $top $a.Title }}
+                                No album
+                            {{ else }}
+                                {{ $a.Title }}
+                           {{ end }}
+                        </a></li>
+                        {{ $lastTop = $top }}
+                        {{ $lastNext = $next }}
     {{ end }}
-</ul>
-</div>
-</div>
+    </li>
+    </ul>
+    </div>
 </section>
 </body>
 
