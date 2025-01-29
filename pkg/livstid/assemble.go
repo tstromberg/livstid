@@ -46,7 +46,7 @@ func urlSafePath(in string) string {
 		o = append(o, p)
 	}
 
-	out := strings.Join(o, "/")
+	out := strings.ToLower(strings.Join(o, "/"))
 	klog.V(1).Infof("%s -> %s", in, out)
 	return out
 }
