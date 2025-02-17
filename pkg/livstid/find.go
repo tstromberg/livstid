@@ -1,7 +1,9 @@
 package livstid
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -14,10 +16,10 @@ import (
 
 var exifDate = "2006:01:02 15:04:05"
 
-func read(path string, et *exiftool.Exiftool) (Image, error) {
+func read(path string, et *exiftool.Exiftool) (*Image, error) {
 	fis := et.ExtractMetadata(path)
 	fi := fis[0]
-	i := Image{}
+	i := &Image{}
 	var err error
 
 	if fi.Err != nil {
@@ -108,6 +110,12 @@ func removeDupes(is []*Image) []*Image {
 		}
 		klog.Infof("dupe found [%s]: %s [%d] or %s [%d]", key, i.BasePath, len(i.BasePath), seen[key].BasePath, len(seen[key].BasePath))
 
+		if len(i.Description) > len(seen[key].Description) {
+			klog.Infof("will use %s instead!", i.BasePath)
+			seen[key] = i
+			continue
+		}
+
 		// use the longest base path? so that we include '-edited' photos.
 		if len(i.BasePath) > len(seen[key].BasePath) {
 			klog.Infof("will use %s instead!", i.BasePath)
@@ -139,6 +147,12 @@ func Find(root string) ([]*Image, error) {
 
 			if strings.HasSuffix(path, "jpg") {
 				klog.V(1).Infof("found %s", path)
+				fi, err := os.Stat(path)
+				if err != nil {
+					klog.Errorf("stat failure: %v", err)
+					return err
+				}
+
 				i, err := read(path, et)
 				if err != nil {
 					klog.Errorf("read failure: %v", err)
@@ -154,15 +168,12 @@ func Find(root string) ([]*Image, error) {
 
 				i.Hier = strings.Split(i.RelPath, string(filepath.Separator))
 
-				fi, err := os.Stat(path)
-				if err != nil {
-					klog.Errorf("stat failure: %v", err)
-					return err
-				}
-
 				i.ModTime = fi.ModTime()
 
-				found = append(found, &i)
+				if err := processSidecars(i); err != nil {
+					klog.Errorf("sidecars: %v", err)
+				}
+				found = append(found, i)
 			}
 
 			return nil
@@ -170,4 +181,31 @@ func Find(root string) ([]*Image, error) {
 	})
 
 	return removeDupes(found), err
+}
+
+type takeOutSidecar struct {
+	Title       string
+	Description string
+}
+
+func processSidecars(i *Image) error {
+	// so far we only process Google Takeout sidecars
+	tp := i.InPath + ".json"
+	if _, err := os.Stat(tp); err != nil {
+		return nil
+	}
+	bs, err := ioutil.ReadFile(tp)
+	if err != nil {
+		return fmt.Errorf("read: %v", err)
+	}
+
+	side := &takeOutSidecar{}
+	if err := json.Unmarshal(bs, side); err != nil {
+		return fmt.Errorf("unmarshal: %v", err)
+	}
+	if side.Description != "" {
+		i.Title = side.Description
+		klog.Infof("%s: found sidecar title: %q", i.BasePath, i.Title)
+	}
+	return nil
 }

@@ -51,10 +51,8 @@
                    <a href="{{ RelPath $.Album.OutPath $p.Resize.View.Path }}"
                         data-ngid="{{ $p.BasePath }}"
                         data-ngThumb="{{  RelPath $.Album.OutPath $p.Resize.Album.Path }}"
-                        data-ngdownloadurl="{{ RelPath $.Album.OutPath $p.OutPath }}">
-                        {{ if $p.Highlight }}class="highlight" {{ end }}
-                       {{ if $p.Title }}{{ $p.Title }}{{ else }}Untitled{{ end }}
-b                   </a>
+                        data-ngdownloadurl="{{ RelPath $.Album.OutPath $p.OutPath }}"
+                        {{ if $p.Highlight }}class="highlight" {{ end }}>{{ if $p.Title }}{{ $p.Title }}{{ else }}Untitled{{ end }}</a>
                 {{ end }}
                </div>
               <!-- ### end of the gallery definition ### -->
