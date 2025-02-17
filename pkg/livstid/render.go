@@ -210,7 +210,7 @@ func tmplFunctions() template.FuncMap {
 				relPath = append(relPath, "..")
 			}
 
-			klog.Infof("upward %s [len=%d] num=%d parts=%d - returning %v", hier, len(hier), num, parts, relPath)
+			klog.V(1).Infof("upward %s [len=%d] num=%d parts=%d - returning %v", hier, len(hier), num, parts, relPath)
 			return strings.Join(relPath, "/")
 		},
 		"ToRoot": func(hier []string) string {

@@ -1,3 +1,4 @@
+// livstid builds hierarchical static photo albums
 package main
 
 import (
@@ -44,11 +45,12 @@ func main() {
 	}
 
 	c := &livstid.Config{
-		InDir:        *inDir,
-		OutDir:       *outDir,
-		Collection:   *title,
-		Description:  *description,
-		RCloneTarget: *rcloneFlag,
+		InDir:           *inDir,
+		OutDir:          *outDir,
+		Collection:      *title,
+		Description:     *description,
+		RCloneTarget:    *rcloneFlag,
+		BuildThumbnails: true,
 	}
 
 	a, err := build(c)
@@ -86,9 +88,8 @@ func build(c *livstid.Config) (*livstid.Assembly, error) {
 	errs := a.Validate()
 	if len(errs) > 0 {
 		for _, err := range errs {
-			klog.Errorf("validation error: %v", err)
+			klog.Errorf("*** validation error: %v", err)
 		}
-		return a, err
 	}
 
 	if err := livstid.Render(c, a); err != nil {

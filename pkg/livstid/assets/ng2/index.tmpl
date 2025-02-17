@@ -63,6 +63,9 @@
     {{ range $i, $a := .Albums }}
         {{ $top := (index $a.Hier 0) }}
         {{ $next := (index $a.Hier 1) }}
+        {{ if $a.Hidden }}
+            {{ continue }}
+        {{ end }}
 
         {{ if ne $top $lastTop }}
             {{ if ne $lastTop "" }}

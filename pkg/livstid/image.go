@@ -58,4 +58,5 @@ type Album struct {
 	Description string
 
 	Images []*Image
+	Hidden bool
 }

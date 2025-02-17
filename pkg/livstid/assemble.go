@@ -68,9 +68,11 @@ func Collect(c *Config) (*Assembly, error) {
 	favs := map[string]*Album{}
 	for _, i := range is {
 		klog.V(1).Infof("build image: %+v", i)
-		i.Resize, err = thumbnails(*i, outDir)
-		if err != nil {
-			return nil, fmt.Errorf("thumbnails: %w", err)
+		if c.BuildThumbnails {
+			i.Resize, err = thumbnails(*i, outDir)
+			if err != nil {
+				return nil, fmt.Errorf("thumbnails: %w", err)
+			}
 		}
 
 		safeRelPath := urlSafePath(i.RelPath)
@@ -84,7 +86,7 @@ func Collect(c *Config) (*Assembly, error) {
 
 		if albums[rd] == nil {
 			albums[rd] = &Album{
-				InPath:  rd,
+				InPath:  filepath.Join(c.InDir, rd),
 				OutPath: filepath.Join(outDir, urlSafePath(rd)),
 				Images:  []*Image{},
 				Title:   filepath.Base(rd),
@@ -206,6 +208,7 @@ func (a *Assembly) Validate() []error {
 			max = maxHierAlbum
 		}
 		if len(album.Images) > max {
+			album.Hidden = true
 			errors = append(errors, fmt.Errorf("Album '%s' contains %d images, which exceeds the %d image limit at hierarchy level %d", album.Title, len(album.Images), max, album.HierLevel))
 		}
 	}
