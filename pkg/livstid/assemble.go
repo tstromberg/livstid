@@ -124,6 +124,7 @@ func Collect(c *Config) (*Assembly, error) {
 			}
 
 			if favs[k] == nil {
+				klog.Infof("FAVORITE %s: %s", k, i.BasePath)
 				favs[k] = &Album{
 					InPath:  rd,
 					OutPath: filepath.Join(outDir, "favorites", k),

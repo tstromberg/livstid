@@ -98,6 +98,30 @@ func read(path string, et *exiftool.Exiftool) (Image, error) {
 	return i, nil
 }
 
+func removeDupes(is []*Image) []*Image {
+	seen := map[string]*Image{}
+	for _, i := range is {
+		key := fmt.Sprintf("%s-%s-%d", i.Taken, i.Speed, i.ISO)
+		if seen[key] == nil {
+			seen[key] = i
+			continue
+		}
+		klog.Infof("dupe found [%s]: %s [%d] or %s [%d]", key, i.BasePath, len(i.BasePath), seen[key].BasePath, len(seen[key].BasePath))
+
+		// use the longest base path? so that we include '-edited' photos.
+		if len(i.BasePath) > len(seen[key].BasePath) {
+			klog.Infof("will use %s instead!", i.BasePath)
+			seen[key] = i
+		}
+	}
+
+	new := []*Image{}
+	for _, k := range seen {
+		new = append(new, k)
+	}
+	return new
+}
+
 func Find(root string) ([]*Image, error) {
 	found := []*Image{}
 
@@ -145,5 +169,5 @@ func Find(root string) ([]*Image, error) {
 		},
 	})
 
-	return found, err
+	return removeDupes(found), err
 }
