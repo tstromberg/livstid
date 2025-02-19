@@ -28,6 +28,7 @@ type Assembly struct {
 	Albums     []*Album
 	HierAlbums []*Album
 	Favorites  []*Album
+	TagAlbums  []*Album
 	Recent     *Album
 }
 
@@ -53,28 +54,33 @@ func urlSafePath(in string) string {
 
 // Collect collects an assembly of photos
 func Collect(c *Config) (*Assembly, error) {
-	inDir := c.InDir
 	outDir := c.OutDir
 
-	klog.V(1).Infof("collect: %s -> %s", inDir, outDir)
-
-	is, err := Find(inDir)
-	if err != nil {
-		return nil, fmt.Errorf("find: %w", err)
+	is := []*Image{}
+	for _, d := range c.InDirs {
+		fs, err := Find(d, c.ProcessSidecars)
+		if err != nil {
+			return nil, fmt.Errorf("find: %w", err)
+		}
+		is = append(is, fs...)
 	}
 
 	albums := map[string]*Album{}
 	hierAlbums := map[string]*Album{}
-	favs := map[string]*Album{}
+	favAlbums := map[string]*Album{}
+	tagAlbums := map[string]*Album{}
+	var err error
+
 	for _, i := range is {
 		klog.V(1).Infof("build image: %+v", i)
-		if c.BuildThumbnails {
-			i.Resize, err = thumbnails(*i, outDir)
+		if len(c.Thumbnails) > 0 {
+			i.Resize, err = thumbnails(*i, c.Thumbnails, outDir)
 			if err != nil {
 				return nil, fmt.Errorf("thumbnails: %w", err)
 			}
 		}
 
+		albumDir := filepath.Dir(i.InPath)
 		safeRelPath := urlSafePath(i.RelPath)
 		rd := filepath.Dir(i.RelPath)
 		i.OutPath = filepath.Join(outDir, safeRelPath)
@@ -86,7 +92,8 @@ func Collect(c *Config) (*Assembly, error) {
 
 		if albums[rd] == nil {
 			albums[rd] = &Album{
-				InPath:  filepath.Join(c.InDir, rd),
+				InPath:  albumDir,
+				RelPath: rd,
 				OutPath: filepath.Join(outDir, urlSafePath(rd)),
 				Images:  []*Image{},
 				Title:   filepath.Base(rd),
@@ -103,7 +110,8 @@ func Collect(c *Config) (*Assembly, error) {
 			valbum := strings.Join(hier[0:level], "/")
 			if hierAlbums[valbum] == nil {
 				hierAlbums[valbum] = &Album{
-					InPath:    filepath.Join(c.InDir, valbum),
+					// this is a lie, but maybe a useful one?
+					InPath:    filepath.Join(filepath.Dir(albumDir), valbum),
 					OutPath:   filepath.Join(outDir, valbum),
 					Images:    []*Image{},
 					Title:     valbum,
@@ -114,27 +122,37 @@ func Collect(c *Config) (*Assembly, error) {
 			hierAlbums[valbum].Images = append(hierAlbums[valbum].Images, i)
 		}
 
-		if !slices.Contains(i.Keywords, favKeyword) {
-			continue
+		if slices.Contains(i.Keywords, favKeyword) {
+			for _, k := range i.Keywords {
+				if k == favKeyword {
+					k = "all"
+				}
+
+				if favAlbums[k] == nil {
+					klog.Infof("FAVORITE %s: %s", k, i.BasePath)
+					favAlbums[k] = &Album{
+						InPath:  rd,
+						OutPath: filepath.Join(outDir, "favorites", k),
+						Images:  []*Image{},
+						Title:   k,
+						Hier:    []string{"favorites", k},
+					}
+				}
+				favAlbums[k].Images = append(favAlbums[k].Images, i)
+			}
 		}
 
 		for _, k := range i.Keywords {
-			if k == favKeyword {
-				k = "all"
-			}
-
-			if favs[k] == nil {
-				klog.Infof("FAVORITE %s: %s", k, i.BasePath)
-				favs[k] = &Album{
+			if tagAlbums[k] == nil {
+				tagAlbums[k] = &Album{
 					InPath:  rd,
-					OutPath: filepath.Join(outDir, "favorites", k),
+					OutPath: filepath.Join(outDir, "tags", k),
 					Images:  []*Image{},
 					Title:   k,
-					Hier:    []string{"favorites", k},
+					Hier:    []string{"tags", k},
 				}
 			}
-			favs[k].Images = append(favs[k].Images, i)
-
+			tagAlbums[k].Images = append(tagAlbums[k].Images, i)
 		}
 	}
 
@@ -155,13 +173,20 @@ func Collect(c *Config) (*Assembly, error) {
 	}
 
 	sort.Slice(as, func(i, j int) bool {
-		return as[i].InPath > as[j].InPath
+		return as[i].RelPath > as[j].RelPath
 	})
 
 	fs := []*Album{}
-	for _, f := range favs {
+	for _, f := range favAlbums {
 		if len(f.Images) >= minAlbumSize {
 			fs = append(fs, f)
+		}
+	}
+
+	ts := []*Album{}
+	for _, f := range tagAlbums {
+		if len(f.Images) >= minAlbumSize {
+			ts = append(ts, f)
 		}
 	}
 
@@ -189,6 +214,7 @@ func Collect(c *Config) (*Assembly, error) {
 		Favorites:  fs,
 		Recent:     recent,
 		HierAlbums: hs,
+		TagAlbums:  ts,
 	}, nil
 }
 

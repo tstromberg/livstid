@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	_ "image/jpeg"
@@ -16,14 +17,18 @@ import (
 	livstid "github.com/tstromberg/livstid/pkg/livstid"
 )
 
-var dryRun = flag.Bool("n", false, "dry-run mode, don't move things")
+var (
+	dryRun           = flag.Bool("n", false, "dry-run mode, don't move things")
+	datePrefix       = regexp.MustCompile(`^\d{4}[\.\-][\d\.\-]+[ _-]`)
+	apostropheSuffix = regexp.MustCompile(`_s$`)
+)
 
 func main() {
 	klog.InitFlags(nil)
 	flag.Parse()
 
 	c := &livstid.Config{
-		InDir: flag.Args()[0],
+		InDirs: flag.Args(),
 	}
 
 	as, err := livstid.Collect(c)
@@ -32,6 +37,10 @@ func main() {
 	}
 
 	for _, a := range as.Albums {
+		if a.InPath == "" || a.InPath == "." {
+			klog.Fatalf("invalid album path: %+v", a)
+		}
+
 		year := 0
 		month := 0
 		for _, i := range a.Images {
@@ -46,14 +55,22 @@ func main() {
 			continue
 		}
 		base := filepath.Base(a.InPath)
+		base = datePrefix.ReplaceAllString(base, "")
+		base = apostropheSuffix.ReplaceAllString(base, `'s`)
 		// fix bad apostrophes
 		base = strings.ReplaceAll(base, "_s ", "'s ")
+		base = strings.ReplaceAll(base, "_ ", " ")
+		base = strings.ReplaceAll(base, " _", " ")
+		base = strings.ReplaceAll(base, "#", "")
+		base = strings.TrimSpace(base)
 
 		new := fmt.Sprintf("%s/%d/%02d/%s", filepath.Dir(a.InPath), year, month, base)
-		klog.Infof("%s -> %s", a.InPath, new)
-		if !*dryRun {
-			os.MkdirAll(filepath.Dir(new), 0o755)
-			os.Rename(a.InPath, new)
+		if *dryRun {
+			klog.Infof("dry run: %s -> %s", a.InPath, new)
+			continue
 		}
+		klog.Infof("%s -> %s", a.InPath, new)
+		os.MkdirAll(filepath.Dir(new), 0o755)
+		os.Rename(a.InPath, new)
 	}
 }

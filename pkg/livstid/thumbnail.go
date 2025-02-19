@@ -25,15 +25,7 @@ type ThumbOpts struct {
 	Quality int
 }
 
-var defaultThumbOpts = map[string]ThumbOpts{
-	"Tiny":     {Y: 120, Quality: 70},
-	"Album":    {Y: 350, Quality: 80},
-	"Recent":   {X: 512, Quality: 85},
-	"Recent2X": {X: 1024, Quality: 85},
-	"View":     {X: 1920, Quality: 85},
-}
-
-func thumbnails(i Image, outDir string) (map[string]ThumbMeta, error) {
+func thumbnails(i Image, opts map[string]ThumbOpts, outDir string) (map[string]ThumbMeta, error) {
 	klog.V(1).Infof("creating thumbnails for %s in %s", i.InPath, outDir)
 	fullDest := filepath.Join(outDir, urlSafePath(i.RelPath))
 	klog.V(1).Infof("relpath: %s -- full dest: %s", i.RelPath, fullDest)
@@ -53,7 +45,7 @@ func thumbnails(i Image, outDir string) (map[string]ThumbMeta, error) {
 
 	if err == nil && sst.Size() != dst.Size() {
 		updated = true
-		klog.Infof("updating %s: size mismatch", fullDest)
+		klog.Infof("updating %s: size mismatch (%d to %d)", fullDest, sst.Size(), dst.Size())
 	}
 
 	if err == nil && sst.ModTime().After(dst.ModTime()) {
@@ -71,7 +63,7 @@ func thumbnails(i Image, outDir string) (map[string]ThumbMeta, error) {
 	var img image.Image
 	thumbs := map[string]ThumbMeta{}
 
-	for name, t := range defaultThumbOpts {
+	for name, t := range opts {
 		relPath := thumbRelPath(i, t)
 		klog.V(1).Infof("thumb relpath: %s", relPath)
 		fullPath := filepath.Join(outDir, relPath)

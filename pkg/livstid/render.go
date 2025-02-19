@@ -42,6 +42,10 @@ func Render(c *Config, a *Assembly) error {
 		return fmt.Errorf("write favorites: %w", err)
 	}
 
+	if err := writeAlbums(c, a.TagAlbums); err != nil {
+		return fmt.Errorf("write tags: %w", err)
+	}
+
 	if err := writeAlbums(c, a.HierAlbums); err != nil {
 		return fmt.Errorf("write hier albums: %w", err)
 	}

@@ -22,7 +22,6 @@ import (
 )
 
 var (
-	inDir       = flag.String("in", "", "Location of input directory")
 	outDir      = flag.String("out", "", "Location of output directory")
 	title       = flag.String("title", "livstid 📸", "Title of photo collection")
 	description = flag.String("description", "(insert description here)", "description of photo collection")
@@ -36,8 +35,8 @@ func main() {
 	klog.InitFlags(nil)
 	flag.Parse()
 
-	if *inDir == "" {
-		klog.Exitf("--in is a required flag")
+	if len(flag.Args()) == 0 {
+		klog.Exitf("required arguments: directories to process")
 	}
 
 	if *outDir == "" {
@@ -45,12 +44,19 @@ func main() {
 	}
 
 	c := &livstid.Config{
-		InDir:           *inDir,
-		OutDir:          *outDir,
-		Collection:      *title,
-		Description:     *description,
-		RCloneTarget:    *rcloneFlag,
-		BuildThumbnails: true,
+		InDirs:       flag.Args(),
+		OutDir:       *outDir,
+		Collection:   *title,
+		Description:  *description,
+		RCloneTarget: *rcloneFlag,
+		Thumbnails: map[string]livstid.ThumbOpts{
+			"Tiny":     {Y: 120, Quality: 70},
+			"Album":    {Y: 350, Quality: 80},
+			"Recent":   {X: 512, Quality: 85},
+			"Recent2X": {X: 1024, Quality: 85},
+			"View":     {X: 1920, Quality: 85},
+		},
+		ProcessSidecars: true,
 	}
 
 	a, err := build(c)
@@ -188,14 +194,14 @@ func updateWatchPaths(c *livstid.Config, w *fsnotify.Watcher, a *livstid.Assembl
 		exists[d] = true
 	}
 
-	dirs := []string{c.InDir}
+	dirs := c.InDirs
 	if path != "" {
 		dirs = append(dirs, path)
 	}
 
 	for _, aa := range a.Albums {
-		dirs = append(dirs, filepath.Join(c.InDir, aa.InPath))
-		dirs = append(dirs, filepath.Dir(filepath.Join(c.InDir, aa.InPath)))
+		dirs = append(dirs, aa.InPath)
+		dirs = append(dirs, filepath.Dir(aa.InPath))
 	}
 
 	slices.Sort(dirs)

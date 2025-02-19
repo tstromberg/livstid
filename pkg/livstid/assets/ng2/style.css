@@ -8,7 +8,7 @@ body {
 
 section.index {
     border-top: 1px solid #000;
-    max-width: 35em;
+    max-width: 40em;
     padding: 1.5em;
     display: flex;
     flex-wrap: nowrap;
@@ -21,11 +21,11 @@ div.index_albums {
 div.index_albums ul {
     list-style-type: "· ";
     margin: 0;
-    padding-left: 1em;
+    padding-left: 2em;
 }
 
 div.index_albums ul.next {
-    padding-left: 2.5em;
+    padding-left: 2em;
     padding-bottom: 0.1em;
     padding-top: 0.1em;
 }

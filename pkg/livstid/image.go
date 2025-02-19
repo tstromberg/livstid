@@ -49,6 +49,7 @@ type Album struct {
 	EndTime   time.Time
 
 	InPath    string
+	RelPath   string
 	OutPath   string
 	ModTime   time.Time
 	Hier      []string

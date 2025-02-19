@@ -32,7 +32,7 @@ func read(path string, et *exiftool.Exiftool) (*Image, error) {
 
 	i.Make, err = fi.GetString("Make")
 	if err != nil {
-		klog.Warningf("unable to get make for %s: %v", path, err)
+		klog.V(1).Infof("unable to get make for %s: %v", path, err)
 	}
 
 	i.Make = strings.TrimSpace(strings.ReplaceAll(i.Make, "CORPORATION", ""))
@@ -108,17 +108,17 @@ func removeDupes(is []*Image) []*Image {
 			seen[key] = i
 			continue
 		}
-		klog.Infof("dupe found [%s]: %s [%d] or %s [%d]", key, i.BasePath, len(i.BasePath), seen[key].BasePath, len(seen[key].BasePath))
+		klog.Infof("photo dupe found: %s (choosing best)", i.InPath)
 
 		if len(i.Description) > len(seen[key].Description) {
-			klog.Infof("will use %s instead!", i.BasePath)
+			klog.V(1).Infof("will use %s instead!", i.BasePath)
 			seen[key] = i
 			continue
 		}
 
 		// use the longest base path? so that we include '-edited' photos.
 		if len(i.BasePath) > len(seen[key].BasePath) {
-			klog.Infof("will use %s instead!", i.BasePath)
+			klog.V(1).Infof("will use %s instead!", i.BasePath)
 			seen[key] = i
 		}
 	}
@@ -130,7 +130,8 @@ func removeDupes(is []*Image) []*Image {
 	return new
 }
 
-func Find(root string) ([]*Image, error) {
+func Find(root string, sidecars bool) ([]*Image, error) {
+	klog.Infof("finding files in %s ...", root)
 	found := []*Image{}
 
 	et, err := exiftool.NewExiftool()
@@ -170,8 +171,10 @@ func Find(root string) ([]*Image, error) {
 
 				i.ModTime = fi.ModTime()
 
-				if err := processSidecars(i); err != nil {
-					klog.Errorf("sidecars: %v", err)
+				if sidecars {
+					if err := processSidecars(i); err != nil {
+						klog.Errorf("sidecars: %v", err)
+					}
 				}
 				found = append(found, i)
 			}
@@ -181,11 +184,6 @@ func Find(root string) ([]*Image, error) {
 	})
 
 	return removeDupes(found), err
-}
-
-type takeOutSidecar struct {
-	Title       string
-	Description string
 }
 
 func processSidecars(i *Image) error {
@@ -199,7 +197,7 @@ func processSidecars(i *Image) error {
 		return fmt.Errorf("read: %v", err)
 	}
 
-	side := &takeOutSidecar{}
+	side := &TakeoutSidecar{}
 	if err := json.Unmarshal(bs, side); err != nil {
 		return fmt.Errorf("unmarshal: %v", err)
 	}

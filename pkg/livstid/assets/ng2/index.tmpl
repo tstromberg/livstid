@@ -87,16 +87,15 @@
         {{ end }}
         {{ if ne $next $lastNext }}
             {{ if ne $lastNext "" }}</ul>{{ end }}
-            <h3><a href="{{ $top }}/{{ $next }}/">{{ $next }}</a></h3>
             <ul class="next">
+              <!-- <a href="{{ $top }}/{{ $next }}/">{{ $next }} - </a></h3> -->
         {{ end }}
-
                         <!-- for each album -->
                         <li><a href="{{ RelPath $.OutDir $a.OutPath }}">
                             {{ if eq $top $a.Title }}
                                 No album
                             {{ else }}
-                                {{ $a.Title }}
+                                {{ $next }} &mdash; {{ $a.Title }}
                            {{ end }}
                         </a></li>
                         {{ $lastTop = $top }}
