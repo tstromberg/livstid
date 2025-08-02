@@ -19,16 +19,18 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 	livstid "github.com/tstromberg/livstid/pkg/livstid"
+	"github.com/tstromberg/livstid/pkg/manage"
 )
 
 var (
-	outDir      = flag.String("out", "", "Location of output directory")
-	title       = flag.String("title", "livstid 📸", "Title of photo collection")
-	description = flag.String("description", "(insert description here)", "description of photo collection")
-	listen      = flag.Bool("listen", false, "serve content via HTTP")
-	addr        = flag.String("addr", "localhost:12800", "host:port to bind to in listen mode")
-	watchFlag   = flag.Bool("watch", false, "watch for changes to inDir and rebuild")
-	rcloneFlag  = flag.String("rclone", "", "rclone target to sync directory contents to")
+	outFlag    = flag.String("out", "", "Location of output directory")
+	titleFlag  = flag.String("title", "livstid 📸", "Title of photo collection")
+	descFlag   = flag.String("description", "(insert description here)", "description of photo collection")
+	listenFlag = flag.Bool("listen", false, "serve content via HTTP (read-only)")
+	manageFlag = flag.Bool("manage", false, "serve content via HTTP (writes)")
+	addrFlag   = flag.String("addr", "localhost:12800", "host:port to bind to in listen mode")
+	watchFlag  = flag.Bool("watch", false, "watch for changes to inDir and rebuild")
+	rcloneFlag = flag.String("rclone", "", "rclone target to sync directory contents to")
 )
 
 func main() {
@@ -39,15 +41,15 @@ func main() {
 		klog.Exitf("required arguments: directories to process")
 	}
 
-	if *outDir == "" {
+	if *outFlag == "" {
 		klog.Exitf("--out is a required flag")
 	}
 
 	c := &livstid.Config{
 		InDirs:       flag.Args(),
-		OutDir:       *outDir,
-		Collection:   *title,
-		Description:  *description,
+		OutDir:       *outFlag,
+		Collection:   *titleFlag,
+		Description:  *descFlag,
 		RCloneTarget: *rcloneFlag,
 		Thumbnails: map[string]livstid.ThumbOpts{
 			"Tiny":     {Y: 120, Quality: 70},
@@ -56,7 +58,7 @@ func main() {
 			"Recent2X": {X: 1024, Quality: 85},
 			"View":     {X: 1920, Quality: 85},
 		},
-		ProcessSidecars: true,
+		ProcessSidecars: false,
 	}
 
 	a, err := build(c)
@@ -73,11 +75,17 @@ func main() {
 		}()
 	}
 
-	if *listen {
+	if *manageFlag {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			serve(*outDir, *addr)
+			serveDynamic(c, *outFlag, *addrFlag)
+		}()
+	} else if *listenFlag {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			serveStatic(*outFlag, *addrFlag)
 		}()
 	}
 
@@ -128,8 +136,8 @@ func rcloneSync(c *livstid.Config) error {
 	return nil
 }
 
-// serve serves a static web directory via HTTP
-func serve(path string, addr string) {
+// serveStatic serves a static web directory via HTTP
+func serveStatic(path string, addr string) {
 	fs := http.FileServer(http.Dir(path))
 	http.Handle("/", fs)
 
@@ -138,6 +146,15 @@ func serve(path string, addr string) {
 	if err != nil {
 		klog.Exitf("listen failed: %v", err)
 	}
+}
+
+// serveDynamic serves a dynamic website with management enabled
+func serveDynamic(c *livstid.Config, path string, addr string) {
+	m := manage.New(c, path)
+	fs := http.FileServer(http.Dir(path))
+	http.Handle("/", fs)
+	http.HandleFunc("/hide", m.HideHandler())
+	http.ListenAndServe(addr, nil)
 }
 
 // watch watches a directory for changes and rebuilds
