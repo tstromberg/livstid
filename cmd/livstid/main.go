@@ -254,7 +254,7 @@ func updateWatchPaths(c *livstid.Config, w *fsnotify.Watcher, a *livstid.Assembl
 		}
 
 		if err := w.Add(d); err != nil {
-			return err
+			return fmt.Errorf("watcher add: %w", err)
 		}
 	}
 

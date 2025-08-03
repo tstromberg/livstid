@@ -68,11 +68,11 @@ func copyAssets(inDir string, outDir string) error {
 		ms, err := filepath.Glob(src)
 		klog.V(1).Infof("copying %d assets from %s", len(ms), src)
 		if err != nil {
-			return err
+			return fmt.Errorf("glob: %w", err)
 		}
 		for _, m := range ms {
 			if err := copy.Copy(m, filepath.Join(outDir, "_", filepath.Base(m))); err != nil {
-				return err
+				return fmt.Errorf("copy: %w", err)
 			}
 		}
 	}
@@ -88,12 +88,16 @@ func writeRecent(c *Config, a *Album) error {
 	}
 
 	path := filepath.Join(c.OutDir, "recent", "all", "index.html")
-	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil { //nolint:gosec // directory permissions are standard
 		return fmt.Errorf("mkdir: %w", err)
 	}
 
 	klog.V(1).Infof("Writing stream index to %s", path)
-	return os.WriteFile(path, bs, 0o644)
+	//nolint:gosec // file permissions are standard
+	if err := os.WriteFile(path, bs, 0o644); err != nil {
+		return fmt.Errorf("write file: %w", err)
+	}
+	return nil
 }
 
 func writeIndex(c *Config, a *Assembly) error {
@@ -105,7 +109,11 @@ func writeIndex(c *Config, a *Assembly) error {
 
 	p := filepath.Join(c.OutDir, "index.html")
 	klog.V(1).Infof("Writing album index to %s", p)
-	return os.WriteFile(p, bs, 0o644)
+	//nolint:gosec // file permissions are standard
+	if err := os.WriteFile(p, bs, 0o644); err != nil {
+		return fmt.Errorf("write file: %w", err)
+	}
+	return nil
 }
 
 func writeAlbums(c *Config, as []*Album) error {
@@ -117,14 +125,14 @@ func writeAlbums(c *Config, as []*Album) error {
 			return fmt.Errorf("render album: %w", err)
 		}
 
-		if err := os.MkdirAll(a.OutPath, 0o755); err != nil {
+		if err := os.MkdirAll(a.OutPath, 0o755); err != nil { //nolint:gosec // directory permissions are standard
 			return fmt.Errorf("mkdir: %w", err)
 		}
 
 		p := filepath.Join(a.OutPath, "index.html")
 		klog.V(1).Infof("Writing album index to %s", p)
 
-		if err := os.WriteFile(p, bs, 0o644); err != nil {
+		if err := os.WriteFile(p, bs, 0o644); err != nil { //nolint:gosec // file permissions are standard
 			return fmt.Errorf("write file: %w", err)
 		}
 	}
@@ -147,7 +155,7 @@ func renderAlbum(c *Config, a *Album, templateString string) ([]byte, error) {
 		Collection: c.Collection,
 		Title:      a.Title,
 		Album:      a,
-		Style:      template.CSS(styleText),
+		Style:      template.CSS(styleText), //nolint:gosec // CSS is from trusted source
 	}
 
 	var tpl bytes.Buffer
@@ -166,13 +174,13 @@ func renderAlbumIndex(c *Config, a *Assembly, ts string) ([]byte, error) {
 	}
 
 	data := struct {
+		Recent      *Album
 		Collection  string
 		Description string
 		OutDir      string
+		Style       template.CSS
 		Albums      []*Album
 		Favorites   []*Album
-		Recent      *Album
-		Style       template.CSS
 	}{
 		Collection:  c.Collection,
 		Description: c.Description,
@@ -180,7 +188,7 @@ func renderAlbumIndex(c *Config, a *Assembly, ts string) ([]byte, error) {
 		Albums:      a.Albums,
 		Favorites:   a.Favorites,
 		Recent:      a.Recent,
-		Style:       template.CSS(styleText),
+		Style:       template.CSS(styleText), //nolint:gosec // CSS is from trusted source
 	}
 
 	var tpl bytes.Buffer
@@ -211,7 +219,7 @@ func tmplFunctions() template.FuncMap {
 			}
 			parts := len(hier) - num - 1
 			relPath := []string{}
-			for i := 0; i < parts; i++ {
+			for range parts {
 				relPath = append(relPath, "..")
 			}
 
@@ -240,7 +248,7 @@ func tmplFunctions() template.FuncMap {
 			for _, a := range as {
 				is = append(is, a.Images...)
 			}
-			return is[rand.IntN(len(is))]
+			return is[rand.IntN(len(is))] //nolint:gosec // not used for security
 		},
 		"MostRecentTime": func(a *Album) time.Time {
 			d := time.Time{}
@@ -261,7 +269,7 @@ func tmplFunctions() template.FuncMap {
 					is = append(is, a.Images...)
 				}
 			}
-			return is[rand.IntN(len(is))]
+			return is[rand.IntN(len(is))] //nolint:gosec // not used for security
 		},
 
 		"BasePath": filepath.Base,

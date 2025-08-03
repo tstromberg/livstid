@@ -25,7 +25,7 @@ func New(c *livstid.Config, path string) *Server {
 
 // HideHandler hides an image or album.
 func (s *Server) HideHandler() http.HandlerFunc {
-	return func(_ http.ResponseWriter, r *http.Request) {
+	return func(_ http.ResponseWriter, _ *http.Request) {
 		klog.Infof("hide")
 	}
 }

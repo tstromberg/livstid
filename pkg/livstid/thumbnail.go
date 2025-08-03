@@ -17,7 +17,7 @@ var (
 	// ThumbDateFormat is the date format used for thumbnails.
 	ThumbDateFormat = "2006-01-02"
 	// ModTimeFormat is the time format used for cache busting in thumbnails.
-	ModTimeFormat   = "150405"
+	ModTimeFormat = "150405"
 )
 
 // ThumbOpts are thumbnail soptions.
@@ -70,7 +70,7 @@ func thumbnails(i *Image, opts map[string]ThumbOpts, outDir string) (map[string]
 		klog.V(1).Infof("thumb relpath: %s", relPath)
 		fullPath := filepath.Join(outDir, relPath)
 
-		if err := os.MkdirAll(filepath.Dir(fullPath), 0o755); err != nil {
+		if err := os.MkdirAll(filepath.Dir(fullPath), 0o755); err != nil { //nolint:gosec // directory permissions are standard
 			return nil, fmt.Errorf("mkdir: %w", err)
 		}
 

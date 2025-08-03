@@ -151,36 +151,11 @@ func Find(root string, sidecars bool) ([]*Image, error) {
 			}
 
 			if strings.HasSuffix(path, "jpg") {
-				klog.V(1).Infof("found %s", path)
-				fi, err := os.Stat(path)
-				if err != nil {
-					klog.Errorf("stat failure: %v", err)
-					return err
-				}
-
-				i, err := read(path, et)
-				if err != nil {
-					klog.Errorf("read failure: %v", err)
-					return err
-				}
-
-				i.InPath = path
-				i.RelPath, err = filepath.Rel(root, path)
+				img, err := processJPG(path, root, et, sidecars)
 				if err != nil {
 					return err
 				}
-				i.BasePath = urlSafePath(filepath.Base(path))
-
-				i.Hier = strings.Split(i.RelPath, string(filepath.Separator))
-
-				i.ModTime = fi.ModTime()
-
-				if sidecars {
-					if err := processSidecars(i); err != nil {
-						klog.Errorf("sidecars: %v", err)
-					}
-				}
-				found = append(found, i)
+				found = append(found, img)
 			}
 
 			return nil
@@ -190,11 +165,44 @@ func Find(root string, sidecars bool) ([]*Image, error) {
 	return removeDupes(found), err
 }
 
+func processJPG(path, root string, et *exiftool.Exiftool, sidecars bool) (*Image, error) {
+	klog.V(1).Infof("found %s", path)
+	fi, err := os.Stat(path)
+	if err != nil {
+		klog.Errorf("stat failure: %v", err)
+		return nil, fmt.Errorf("stat: %w", err)
+	}
+
+	i, err := read(path, et)
+	if err != nil {
+		klog.Errorf("read failure: %v", err)
+		return nil, err
+	}
+
+	i.InPath = path
+	i.RelPath, err = filepath.Rel(root, path)
+	if err != nil {
+		return nil, fmt.Errorf("rel path: %w", err)
+	}
+	i.BasePath = urlSafePath(filepath.Base(path))
+	i.Hier = strings.Split(i.RelPath, string(filepath.Separator))
+	i.ModTime = fi.ModTime()
+
+	if sidecars {
+		if err := processSidecars(i); err != nil {
+			klog.Errorf("sidecars: %v", err)
+		}
+	}
+
+	return i, nil
+}
+
 func processSidecars(i *Image) error {
 	// so far we only process Google Takeout sidecars
 	tp := i.InPath + ".json"
 	if _, err := os.Stat(tp); err != nil {
-		return nil // no sidecar file, not an error
+		//nolint:nilerr // no sidecar file is not an error
+		return nil
 	}
 	bs, err := os.ReadFile(tp)
 	if err != nil {

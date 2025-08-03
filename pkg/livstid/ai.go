@@ -18,7 +18,7 @@ func AutoTag(ctx context.Context, model *genai.GenerativeModel, i *Image) ([]str
 	thumb := i.Resize[TagThumb].Path
 	bs, err := os.ReadFile(thumb)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("read file: %w", err)
 	}
 	img := genai.ImageData("jpeg", bs)
 	prompt := genai.Text("generate 1-5 comma-separated one-word tags. Here are some example tags: " +
