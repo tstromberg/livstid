@@ -10,7 +10,7 @@ import (
 	_ "image/jpeg"
 	_ "image/png"
 
-	"cloud.google.com/go/vertexai/genai"
+	"google.golang.org/genai"
 	"k8s.io/klog/v2"
 
 	"github.com/barasher/go-exiftool"
@@ -27,22 +27,29 @@ func main() {
 	klog.InitFlags(nil)
 	flag.Parse()
 
-	if *outDir == "" {
-		klog.Fatalf("please give me an out directory to dump thumbnails into")
+	klog.Infof("autotag starting with %d input directories", len(flag.Args()))
+
+	if len(flag.Args()) == 0 {
+		klog.Fatalf("No input directories provided. Usage: %s -out <output_dir> <input_dir1> [input_dir2 ...]", os.Args[0])
 	}
 
+	if *outDir == "" {
+		klog.Fatalf("please give me an out directory to scan through")
+	}
+
+	klog.Infof("Input directories: %v", flag.Args())
+	klog.Infof("Output directory: %s", *outDir)
+
 	ctx := context.Background()
-	client, err := genai.NewClient(ctx, os.Getenv("GCP_PROJECT_ID"), "us-central1")
+	cfg := &genai.ClientConfig{
+		APIKey: os.Getenv("GOOGLE_AI_API_KEY"),
+	}
+	client, err := genai.NewClient(ctx, cfg)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer func() {
-		if err := client.Close(); err != nil {
-			klog.Errorf("Failed to close client: %v", err)
-		}
-	}()
 
-	model := client.GenerativeModel("gemini-pro-vision")
+	modelName := "gemini-2.5-flash"
 
 	c := &livstid.Config{
 		InDirs: flag.Args(),
@@ -53,10 +60,12 @@ func main() {
 		},
 	}
 
+	klog.Infof("Collecting images from directories...")
 	as, err := livstid.Collect(c)
 	if err != nil {
 		klog.Fatalf("unable to collect: %v", err)
 	}
+	klog.Infof("Found %d albums", len(as.Albums))
 
 	e, err := exiftool.NewExiftool()
 	if err != nil {
@@ -68,13 +77,16 @@ func main() {
 		}
 	}()
 
+	totalImages := 0
 	for _, a := range as.Albums {
+		klog.Infof("Processing album: %s with %d images", a.Title, len(a.Images))
 		for _, i := range a.Images {
+			totalImages++
 			if !*overwrite && len(i.Keywords) > 0 {
 				klog.Infof("%s has tags: %v", i.InPath, i.Keywords)
 				continue
 			}
-			tags, err := livstid.AutoTag(ctx, model, i)
+			tags, err := livstid.AutoTag(ctx, client, modelName, i)
 			if err != nil {
 				klog.Errorf("err: %v", err)
 			}
@@ -93,4 +105,6 @@ func main() {
 			}
 		}
 	}
+
+	klog.Infof("autotag completed. Processed %d total images across %d albums", totalImages, len(as.Albums))
 }
