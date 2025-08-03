@@ -9,8 +9,13 @@ This project is actively developing and may have rough edges. Contributions and 
 ## Features
 
 - Generate static photo websites from local image collections
+- Support for multiple input directories
+- AI-powered automatic photo tagging (via autotag command)
+- Google Takeout sidecar file support
+- Duplicate image filtering
 - Supports watching directories for real-time updates
 - Optional HTTP server for local preview
+- Management mode with ability to hide photos
 - Ability to sync to remote targets via rclone
 
 ## Example Output
@@ -20,33 +25,41 @@ This project is actively developing and may have rough edges. Contributions and 
 ## Usage
 
 ```bash
-livstid -in=/path/to/photos -out=/path/to/website
+livstid /path/to/photos /another/path/to/photos -out=/path/to/website
 ```
 
 ### Flags
 
 | Flag | Description | Default |
 |------|-------------|---------|
-| `-in` | Location of input directory | (required) |
 | `-out` | Location of output directory | (required) |
 | `-title` | Title of photo collection | "livstid 📸" |
 | `-description` | Description of photo collection | "(insert description here)" |
-| `-listen` | Serve content via HTTP | false |
-| `-addr` | Host:port to bind to in listen mode | "localhost:12800" |
-| `-watch` | Watch for changes to input directory and rebuild | false |
+| `-listen` | Serve content via HTTP (read-only) | false |
+| `-manage` | Serve content via HTTP with management features | false |
+| `-addr` | Host:port to bind to in listen/manage mode | "localhost:12800" |
+| `-watch` | Watch for changes to input directories and rebuild | false |
 | `-rclone` | rclone target to sync directory contents to | "" |
+
+**Note:** Input directories are specified as positional arguments (not with -in flag)
 
 ## Example Workflow
 
 ```bash
-# Basic generation
-livstid -in=~/Photos/Family -out=~/WebsiteOutput
+# Basic generation from single directory
+livstid ~/Photos/Family -out=~/WebsiteOutput
+
+# Process multiple directories
+livstid ~/Photos/Family ~/Photos/Vacation ~/Photos/Events -out=~/WebsiteOutput
 
 # Watch for changes and serve locally
-livstid -in=~/Photos/Family -out=~/WebsiteOutput -watch -listen
+livstid ~/Photos/Family -out=~/WebsiteOutput -watch -listen
+
+# Management mode with ability to hide photos
+livstid ~/Photos/Family -out=~/WebsiteOutput -manage
 
 # Sync to a remote target
-livstid -in=~/Photos/Family -out=~/WebsiteOutput -rclone=remote:bucket/photos
+livstid ~/Photos/Family -out=~/WebsiteOutput -rclone=remote:bucket/photos
 ```
 
 ## Requirements
@@ -57,7 +70,12 @@ livstid -in=~/Photos/Family -out=~/WebsiteOutput -rclone=remote:bucket/photos
 ## Installation
 
 ```bash
+# Install the main livstid command
 go install github.com/tstromberg/livstid/cmd/livstid@latest
+
+# Optional: Install additional tools
+go install github.com/tstromberg/livstid/cmd/autotag@latest  # AI-powered photo tagging
+go install github.com/tstromberg/livstid/cmd/reorg@latest    # Photo organization helper
 ```
 
 ## Contributing
