@@ -2,6 +2,8 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"log"
@@ -60,21 +62,7 @@ func main() {
 		},
 		ProcessSidecars: false,
 	}
-
-	a, err := build(c)
-	if err != nil {
-		klog.Exitf("build failed: %v", err)
-	}
-
 	var wg sync.WaitGroup
-	if *watchFlag {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			watch(c, a)
-		}()
-	}
-
 	if *manageFlag {
 		wg.Add(1)
 		go func() {
@@ -89,10 +77,25 @@ func main() {
 		}()
 	}
 
+	a, err := build(c)
+	if err != nil {
+		klog.Exitf("build failed: %v", err)
+	}
+
+	if *watchFlag {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			if err := watch(c, a); err != nil {
+				klog.Errorf("Watch error: %v", err)
+			}
+		}()
+	}
+
 	wg.Wait()
 }
 
-// build collects, renders, and syncs
+// build collects, renders, and syncs.
 func build(c *livstid.Config) (*livstid.Assembly, error) {
 	a, err := livstid.Collect(c)
 	if err != nil {
@@ -119,16 +122,18 @@ func build(c *livstid.Config) (*livstid.Assembly, error) {
 	return a, nil
 }
 
-// rcloneSync synchronizes the website to a remote crlone target
+// rcloneSync synchronizes the website to a remote crlone target.
 func rcloneSync(c *livstid.Config) error {
 	klog.Infof("rclone syncing to %s ...", c.RCloneTarget)
 	path, err := exec.LookPath("rclone")
 	if err != nil {
-		return fmt.Errorf("rclone not installed in $PATH")
+		return errors.New("rclone not installed in $PATH")
 	}
 
 	start := time.Now()
-	cmd := exec.Command(path, "sync", filepath.Join(c.OutDir, "/"), filepath.Join(c.RCloneTarget, "/"))
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, path, "sync", c.OutDir+"/", c.RCloneTarget+"/")
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("%v failed: %w", cmd, err)
 	}
@@ -136,34 +141,54 @@ func rcloneSync(c *livstid.Config) error {
 	return nil
 }
 
-// serveStatic serves a static web directory via HTTP
+// serveStatic serves a static web directory via HTTP.
 func serveStatic(path string, addr string) {
 	fs := http.FileServer(http.Dir(path))
 	http.Handle("/", fs)
 
 	klog.Infof("Listening on %s...", addr)
-	err := http.ListenAndServe(addr, nil)
+	server := &http.Server{
+		Addr:         addr,
+		Handler:      nil,
+		ReadTimeout:  15 * time.Second,
+		WriteTimeout: 15 * time.Second,
+		IdleTimeout:  60 * time.Second,
+	}
+	err := server.ListenAndServe()
 	if err != nil {
 		klog.Exitf("listen failed: %v", err)
 	}
 }
 
-// serveDynamic serves a dynamic website with management enabled
+// serveDynamic serves a dynamic website with management enabled.
 func serveDynamic(c *livstid.Config, path string, addr string) {
 	m := manage.New(c, path)
 	fs := http.FileServer(http.Dir(path))
 	http.Handle("/", fs)
 	http.HandleFunc("/hide", m.HideHandler())
-	http.ListenAndServe(addr, nil)
+	server := &http.Server{
+		Addr:         addr,
+		Handler:      nil,
+		ReadTimeout:  15 * time.Second,
+		WriteTimeout: 15 * time.Second,
+		IdleTimeout:  60 * time.Second,
+	}
+	if err := server.ListenAndServe(); err != nil {
+		klog.Errorf("HTTP server error: %v", err)
+	}
 }
 
-// watch watches a directory for changes and rebuilds
+// watch watches a directory for changes and rebuilds.
 func watch(c *livstid.Config, a *livstid.Assembly) error {
 	w, err := fsnotify.NewWatcher()
 	if err != nil {
 		return fmt.Errorf("new watches: %w", err)
 	}
-	defer w.Close()
+	defer func() {
+		if err := w.Close(); err != nil {
+			klog.Errorf("Failed to close watcher: %v", err)
+		}
+	}()
 
 	// Start listening for events.
 	go func() {
@@ -175,17 +200,17 @@ func watch(c *livstid.Config, a *livstid.Assembly) error {
 				}
 
 				// TODO: dedup events in quick succession
-				if event.Has(fsnotify.Write) || event.Has(fsnotify.Create) || event.Has(fsnotify.Rename) || event.Has(fsnotify.Remove) {
+				if event.Has(fsnotify.Write) || event.Has(fsnotify.Create) ||
+					event.Has(fsnotify.Rename) || event.Has(fsnotify.Remove) {
 					klog.Infof("watch event: %s", event)
-					a, err := build(c)
+					assembly, err := build(c)
 					if err != nil {
 						klog.Exitf("build failed: %v", err)
 					}
 
-					if err := updateWatchPaths(c, w, a, event.Name); err != nil {
+					if err := updateWatchPaths(c, w, assembly, event.Name); err != nil {
 						klog.Exitf("watch update failed: %v", err)
 					}
-
 				}
 			case err, ok := <-w.Errors:
 				if !ok {
@@ -204,7 +229,7 @@ func watch(c *livstid.Config, a *livstid.Assembly) error {
 	return nil
 }
 
-// updateWatchPaths updates the watch list with new paths
+// updateWatchPaths updates the watch list with new paths.
 func updateWatchPaths(c *livstid.Config, w *fsnotify.Watcher, a *livstid.Assembly, path string) error {
 	exists := map[string]bool{}
 	for _, d := range w.WatchList() {
@@ -217,8 +242,7 @@ func updateWatchPaths(c *livstid.Config, w *fsnotify.Watcher, a *livstid.Assembl
 	}
 
 	for _, aa := range a.Albums {
-		dirs = append(dirs, aa.InPath)
-		dirs = append(dirs, filepath.Dir(aa.InPath))
+		dirs = append(dirs, aa.InPath, filepath.Dir(aa.InPath))
 	}
 
 	slices.Sort(dirs)

@@ -14,7 +14,9 @@ import (
 )
 
 var (
+	// ThumbDateFormat is the date format used for thumbnails.
 	ThumbDateFormat = "2006-01-02"
+	// ModTimeFormat is the time format used for cache busting in thumbnails.
 	ModTimeFormat   = "150405"
 )
 
@@ -25,7 +27,7 @@ type ThumbOpts struct {
 	Quality int
 }
 
-func thumbnails(i Image, opts map[string]ThumbOpts, outDir string) (map[string]ThumbMeta, error) {
+func thumbnails(i *Image, opts map[string]ThumbOpts, outDir string) (map[string]ThumbMeta, error) {
 	klog.V(1).Infof("creating thumbnails for %s in %s", i.InPath, outDir)
 	fullDest := filepath.Join(outDir, urlSafePath(i.RelPath))
 	klog.V(1).Infof("relpath: %s -- full dest: %s", i.RelPath, fullDest)
@@ -143,7 +145,11 @@ func readThumb(path string) (*ThumbMeta, error) {
 	if err != nil {
 		return nil, fmt.Errorf("open: %w", err)
 	}
-	defer f.Close()
+	defer func() {
+		if err := f.Close(); err != nil {
+			klog.Errorf("Failed to close file: %v", err)
+		}
+	}()
 
 	ic, _, err := image.DecodeConfig(f)
 	if err != nil {
@@ -154,7 +160,7 @@ func readThumb(path string) (*ThumbMeta, error) {
 }
 
 // thumbRelPath returns a relative path to a thumbnail, optimizing for both cache busting and SEO.
-func thumbRelPath(i Image, t ThumbOpts) string {
+func thumbRelPath(i *Image, t ThumbOpts) string {
 	base := filepath.Base(i.RelPath)
 	ext := filepath.Ext(base)
 	noExt := strings.TrimSuffix(base, ext)

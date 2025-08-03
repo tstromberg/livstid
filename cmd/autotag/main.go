@@ -36,7 +36,11 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer client.Close()
+	defer func() {
+		if err := client.Close(); err != nil {
+			klog.Errorf("Failed to close client: %v", err)
+		}
+	}()
 
 	model := client.GenerativeModel("gemini-pro-vision")
 
@@ -58,7 +62,11 @@ func main() {
 	if err != nil {
 		klog.Fatalf("exiftool: %v", err)
 	}
-	defer e.Close()
+	defer func() {
+		if err := e.Close(); err != nil {
+			klog.Errorf("Failed to close exiftool: %v", err)
+		}
+	}()
 
 	for _, a := range as.Albums {
 		for _, i := range a.Images {
@@ -79,6 +87,9 @@ func main() {
 			o[0].SetStrings("Keywords", tags)
 			if !*dryRun {
 				e.WriteMetadata(o)
+				if o[0].Err != nil {
+					klog.Errorf("Failed to write metadata for %s: %v", i.InPath, o[0].Err)
+				}
 			}
 		}
 	}

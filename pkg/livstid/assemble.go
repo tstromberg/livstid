@@ -18,11 +18,11 @@ var (
 	maxHierAlbum        = 48
 	maxTopHierAlbum     = 365
 	minAlbumSize        = 4
-	entityChar          = regexp.MustCompile(`\%[0-9A-Fa-f]{2,4}`)
+	entityChar          = regexp.MustCompile(`%[0-9A-Fa-f]{2,4}`)
 	multipleUnderscores = regexp.MustCompile(`_{2,}`)
 )
 
-// an Assembly is an assembled collection of images.
+// Assembly is an assembled collection of images.
 type Assembly struct {
 	Images     []*Image
 	Albums     []*Album
@@ -52,7 +52,7 @@ func urlSafePath(in string) string {
 	return out
 }
 
-// Collect collects an assembly of photos
+// Collect collects an assembly of photos.
 func Collect(c *Config) (*Assembly, error) {
 	outDir := c.OutDir
 
@@ -74,7 +74,7 @@ func Collect(c *Config) (*Assembly, error) {
 	for _, i := range is {
 		klog.V(1).Infof("build image: %+v", i)
 		if len(c.Thumbnails) > 0 {
-			i.Resize, err = thumbnails(*i, c.Thumbnails, outDir)
+			i.Resize, err = thumbnails(i, c.Thumbnails, outDir)
 			if err != nil {
 				return nil, fmt.Errorf("thumbnails: %w", err)
 			}
@@ -158,14 +158,14 @@ func Collect(c *Config) (*Assembly, error) {
 
 	as := []*Album{}
 	for _, a := range albums {
-		is := a.Images
-		if len(is) < minAlbumSize {
+		imgs := a.Images
+		if len(imgs) < minAlbumSize {
 			continue
 		}
-		sort.Slice(is, func(i, j int) bool {
-			return is[i].Taken.Before(is[j].Taken)
+		sort.Slice(imgs, func(i, j int) bool {
+			return imgs[i].Taken.Before(imgs[j].Taken)
 		})
-		a.Images = is
+		a.Images = imgs
 		for i, p := range a.Images {
 			klog.V(1).Infof("%s: %d = %s [%s] (taken=%s)", a.Title, i, p.InPath, p.Title, p.Taken)
 		}
@@ -192,7 +192,7 @@ func Collect(c *Config) (*Assembly, error) {
 
 	hs := []*Album{}
 	for _, f := range hierAlbums {
-		hs = append(fs, f)
+		hs = append(hs, f)
 	}
 
 	recent := &Album{Title: "Recent", Images: is, OutPath: outDir}
@@ -218,7 +218,7 @@ func Collect(c *Config) (*Assembly, error) {
 	}, nil
 }
 
-// Validate checks the assembly for potential issues with image and album counts
+// Validate checks the assembly for potential issues with image and album counts.
 func (a *Assembly) Validate() []error {
 	var errors []error
 
@@ -226,17 +226,18 @@ func (a *Assembly) Validate() []error {
 	for _, album := range a.Albums {
 		klog.Infof("%s has %d photos [level=%d]", album.Title, len(album.Images), album.HierLevel)
 
-		max := maxAlbum
+		maxImages := maxAlbum
 		if album.HierLevel == 1 {
-			max = maxTopHierAlbum
+			maxImages = maxTopHierAlbum
 		}
 
 		if album.HierLevel > 1 {
-			max = maxHierAlbum
+			maxImages = maxHierAlbum
 		}
-		if len(album.Images) > max {
+		if len(album.Images) > maxImages {
 			album.Hidden = true
-			errors = append(errors, fmt.Errorf("Album '%s' contains %d images, which exceeds the %d image limit at hierarchy level %d", album.Title, len(album.Images), max, album.HierLevel))
+			errors = append(errors, fmt.Errorf("Album '%s' contains %d images, which exceeds the %d image limit at hierarchy level %d",
+				album.Title, len(album.Images), maxImages, album.HierLevel))
 		}
 	}
 

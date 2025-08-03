@@ -3,7 +3,6 @@ package livstid
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -44,8 +43,8 @@ func read(path string, et *exiftool.Exiftool) (*Image, error) {
 
 	i.Model = strings.TrimSpace(strings.ReplaceAll(i.Model, i.Make, ""))
 
-	i.LensMake, err = fi.GetString("LensMake")
-	i.LensModel, err = fi.GetString("LensModel")
+	i.LensMake, _ = fi.GetString("LensMake")
+	i.LensModel, _ = fi.GetString("LensModel")
 
 	i.Height, err = fi.GetInt("ImageHeight")
 	if err != nil {
@@ -78,8 +77,8 @@ func read(path string, et *exiftool.Exiftool) (*Image, error) {
 	}
 
 	i.FocalLength = strings.ReplaceAll(i.FocalLength, ".0", "")
-	i.Keywords, err = fi.GetStrings("Keywords")
-	i.Description, err = fi.GetString("ImageDescription")
+	i.Keywords, _ = fi.GetStrings("Keywords")
+	i.Description, _ = fi.GetString("ImageDescription")
 
 	i.Title, err = fi.GetString("Headline")
 	if err != nil {
@@ -123,13 +122,14 @@ func removeDupes(is []*Image) []*Image {
 		}
 	}
 
-	new := []*Image{}
+	result := []*Image{}
 	for _, k := range seen {
-		new = append(new, k)
+		result = append(result, k)
 	}
-	return new
+	return result
 }
 
+// Find searches for images in a directory tree.
 func Find(root string, sidecars bool) ([]*Image, error) {
 	klog.Infof("finding files in %s ...", root)
 	found := []*Image{}
@@ -138,10 +138,14 @@ func Find(root string, sidecars bool) ([]*Image, error) {
 	if err != nil {
 		klog.Exitf("exiftool failed: %v\n", err)
 	}
-	defer et.Close()
+	defer func() {
+		if err := et.Close(); err != nil {
+			klog.Errorf("Failed to close exiftool: %v", err)
+		}
+	}()
 
 	err = godirwalk.Walk(root, &godirwalk.Options{
-		Callback: func(path string, de *godirwalk.Dirent) error {
+		Callback: func(path string, _ *godirwalk.Dirent) error {
 			if filepath.Base(path)[0] == '.' {
 				return godirwalk.SkipThis
 			}
@@ -190,16 +194,16 @@ func processSidecars(i *Image) error {
 	// so far we only process Google Takeout sidecars
 	tp := i.InPath + ".json"
 	if _, err := os.Stat(tp); err != nil {
-		return nil
+		return nil // no sidecar file, not an error
 	}
-	bs, err := ioutil.ReadFile(tp)
+	bs, err := os.ReadFile(tp)
 	if err != nil {
-		return fmt.Errorf("read: %v", err)
+		return fmt.Errorf("read: %w", err)
 	}
 
 	side := &TakeoutSidecar{}
 	if err := json.Unmarshal(bs, side); err != nil {
-		return fmt.Errorf("unmarshal: %v", err)
+		return fmt.Errorf("unmarshal: %w", err)
 	}
 	if side.Description != "" {
 		i.Title = side.Description

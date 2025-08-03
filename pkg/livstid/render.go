@@ -5,7 +5,7 @@ import (
 	_ "embed"
 	"fmt"
 	"html/template"
-	"math/rand"
+	"math/rand/v2"
 	"os"
 	"path/filepath"
 	"strings"
@@ -29,6 +29,7 @@ var styleText string
 
 var assetsDir = "pkg/livstid/assets/ng2"
 
+// Render generates HTML output for the photo assembly.
 func Render(c *Config, a *Assembly) error {
 	if err := copyAssets(assetsDir, c.OutDir); err != nil {
 		return fmt.Errorf("copyAssets: %w", err)
@@ -86,7 +87,7 @@ func writeRecent(c *Config, a *Album) error {
 		return fmt.Errorf("render stream: %w", err)
 	}
 
-	path := filepath.Join(c.OutDir, "recent/all/index.html")
+	path := filepath.Join(c.OutDir, "recent", "all", "index.html")
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 		return fmt.Errorf("mkdir: %w", err)
 	}
@@ -120,7 +121,7 @@ func writeAlbums(c *Config, as []*Album) error {
 			return fmt.Errorf("mkdir: %w", err)
 		}
 
-		p := filepath.Join(filepath.Join(a.OutPath, "index.html"))
+		p := filepath.Join(a.OutPath, "index.html")
 		klog.V(1).Infof("Writing album index to %s", p)
 
 		if err := os.WriteFile(p, bs, 0o644); err != nil {
@@ -239,7 +240,7 @@ func tmplFunctions() template.FuncMap {
 			for _, a := range as {
 				is = append(is, a.Images...)
 			}
-			return is[rand.Intn(len(is))]
+			return is[rand.IntN(len(is))]
 		},
 		"MostRecentTime": func(a *Album) time.Time {
 			d := time.Time{}
@@ -260,7 +261,7 @@ func tmplFunctions() template.FuncMap {
 					is = append(is, a.Images...)
 				}
 			}
-			return is[rand.Intn(len(is))]
+			return is[rand.IntN(len(is))]
 		},
 
 		"BasePath": filepath.Base,

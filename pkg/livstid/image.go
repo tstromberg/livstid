@@ -12,6 +12,7 @@ type ThumbMeta struct {
 	Path    string
 }
 
+// Image represents a photo with its metadata.
 type Image struct {
 	InPath   string
 	OutPath  string
@@ -44,6 +45,7 @@ type Image struct {
 	Height int64
 }
 
+// Album represents a collection of images.
 type Album struct {
 	StartTime time.Time
 	EndTime   time.Time

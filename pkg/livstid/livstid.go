@@ -1,5 +1,6 @@
 package livstid
 
+// Config holds configuration for livstid.
 type Config struct {
 	InDirs          []string
 	OutDir          string
@@ -10,7 +11,7 @@ type Config struct {
 	ProcessSidecars bool
 }
 
-// Sidecar is a JSON file for EXIF overrides that is compatible with Google Takeout
+// TakeoutSidecar is a JSON file for EXIF overrides that is compatible with Google Takeout.
 type TakeoutSidecar struct {
 	Title       string
 	Description string

@@ -19,7 +19,7 @@ import (
 
 var (
 	dryRun           = flag.Bool("n", false, "dry-run mode, don't move things")
-	datePrefix       = regexp.MustCompile(`^\d{4}[\.\-][\d\.\-]+[ _-]`)
+	datePrefix       = regexp.MustCompile(`^\d{4}[.\-][\d.\-]+[ _-]`)
 	apostropheSuffix = regexp.MustCompile(`_s$`)
 )
 
@@ -64,13 +64,18 @@ func main() {
 		base = strings.ReplaceAll(base, "#", "")
 		base = strings.TrimSpace(base)
 
-		new := fmt.Sprintf("%s/%d/%02d/%s", filepath.Dir(a.InPath), year, month, base)
+		newPath := fmt.Sprintf("%s/%d/%02d/%s", filepath.Dir(a.InPath), year, month, base)
 		if *dryRun {
-			klog.Infof("dry run: %s -> %s", a.InPath, new)
+			klog.Infof("dry run: %s -> %s", a.InPath, newPath)
 			continue
 		}
-		klog.Infof("%s -> %s", a.InPath, new)
-		os.MkdirAll(filepath.Dir(new), 0o755)
-		os.Rename(a.InPath, new)
+		klog.Infof("%s -> %s", a.InPath, newPath)
+		if err := os.MkdirAll(filepath.Dir(newPath), 0o750); err != nil {
+			klog.Errorf("Failed to create directory %s: %v", filepath.Dir(newPath), err)
+			continue
+		}
+		if err := os.Rename(a.InPath, newPath); err != nil {
+			klog.Errorf("Failed to rename %s to %s: %v", a.InPath, newPath, err)
+		}
 	}
 }
