@@ -15,9 +15,9 @@ import (
 
 var (
 	favKeyword          = "fav"
-	maxAlbum            = 24
-	maxHierAlbum        = 48
-	maxTopHierAlbum     = 365
+	maxAlbum            = 30
+	maxHierAlbum        = 60
+	maxTopHierAlbum     = 500
 	minAlbumSize        = 4
 	entityChar          = regexp.MustCompile(`%[0-9A-Fa-f]{2,4}`)
 	multipleUnderscores = regexp.MustCompile(`_{2,}`)
@@ -148,7 +148,17 @@ func addToHierAlbums(i *Image, hier []string, hierAlbums map[string]*Album, albu
 				HierLevel: level,
 			}
 		}
-		hierAlbums[valbum].Images = append(hierAlbums[valbum].Images, i)
+
+		// Enforce hierarchical limits
+		maxImages := maxHierAlbum
+		if level == 1 {
+			maxImages = maxTopHierAlbum
+		}
+
+		// Only add image if we haven't reached the limit
+		if len(hierAlbums[valbum].Images) < maxImages {
+			hierAlbums[valbum].Images = append(hierAlbums[valbum].Images, i)
+		}
 	}
 }
 
@@ -284,7 +294,25 @@ func (a *Assembly) Validate() []error {
 		if len(album.Images) > maxImages {
 			album.Hidden = true
 			errs = append(errs, fmt.Errorf(
-				"Album '%s' contains %d images, which exceeds the %d image limit at hierarchy level %d",
+				"album '%s' contains %d images, which exceeds the %d image limit at hierarchy level %d",
+				album.Title, len(album.Images), maxImages, album.HierLevel,
+			))
+		}
+	}
+
+	// Check hierarchical album photo count
+	for _, album := range a.HierAlbums {
+		klog.Infof("Hier %s has %d photos [level=%d]", album.Title, len(album.Images), album.HierLevel)
+
+		maxImages := maxHierAlbum
+		if album.HierLevel == 1 {
+			maxImages = maxTopHierAlbum
+		}
+
+		if len(album.Images) > maxImages {
+			album.Hidden = true
+			errs = append(errs, fmt.Errorf(
+				"hierarchical album '%s' contains %d images, which exceeds the %d image limit at hierarchy level %d",
 				album.Title, len(album.Images), maxImages, album.HierLevel,
 			))
 		}

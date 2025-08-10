@@ -1,4 +1,4 @@
-// reorg reorganizes a photo album directory based on the date
+// reorg reorganizes a photo album directory based on the date.
 package main
 
 import (

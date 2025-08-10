@@ -1,4 +1,4 @@
-// livstid builds hierarchical static photo albums
+// livstid builds hierarchical static photo albums.
 package main
 
 import (

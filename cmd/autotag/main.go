@@ -1,4 +1,4 @@
-// autotag adds suggested tags to JPEG images using Google Vertex AI
+// autotag adds suggested tags to JPEG images using Google Vertex AI.
 package main
 
 import (
