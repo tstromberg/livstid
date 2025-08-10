@@ -63,8 +63,7 @@ func AutoTag(ctx context.Context, client *genai.Client, modelName string, i *Ima
 	for _, c := range resp.Candidates {
 		if len(c.Content.Parts) > 0 && c.Content.Parts[0].Text != "" {
 			text := strings.TrimSpace(c.Content.Parts[0].Text)
-			text = strings.ReplaceAll(text, ", ", ",")
-			content := strings.ReplaceAll(text, " ", "_")
+			content := strings.ReplaceAll(text, " ", "")
 			//	klog.Infof("content: %s", content)
 			tags = strings.Split(strings.ToLower(content), ",")
 			break
